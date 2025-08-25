@@ -201,6 +201,15 @@
                 </v-btn>
                 <v-btn
                   size="small"
+                  color="primary"
+                  variant="tonal"
+                  @click.stop="regularizeRecord(item.id)"
+                >
+                  <v-icon size="18">mdi-hammer-wrench</v-icon>
+                  <v-tooltip activator="parent" location="top">Regularize</v-tooltip>
+                </v-btn>
+                <v-btn
+                  size="small"
                   color="error"
                   variant="text"
                   @click.stop="deleteRecord(item.id)"
@@ -208,6 +217,7 @@
                   <v-icon size="18">mdi-delete-outline</v-icon>
                   <v-tooltip activator="parent" location="top">Delete</v-tooltip>
                 </v-btn>
+                
               </div>
             </template>
           </v-data-table>
@@ -753,7 +763,7 @@ const formatDate = (dateStr) => {
 }
 
 const formatTime = (timeStr) => {
-  if (!timeStr) return ""
+  if (!timeStr) return "--:--"
   // Handle full datetime format "YYYY-MM-DD HH:MM:SS"
   const date = new Date(timeStr)
   return date.toLocaleTimeString([], { 
@@ -770,11 +780,10 @@ const formatDuration = (duration) => {
 }
 
 const getStatusColor = (status) => {
-  switch (status) {
-    case "Approved": return "success"
-    case "Rejected": return "error"
-    default: return "warning"
-  }
+  if (!status) return "error"
+  if (status === "OUT") return "success"
+  if (status === "UNUSUAL_CHECKIN") return "danger"
+  return "warning"
 }
 
 const getStatusTextClass = (status) => {
@@ -782,11 +791,10 @@ const getStatusTextClass = (status) => {
 }
 
 const getStatusIcon = (status) => {
-  switch (status) {
-    case "Approved": return "mdi-check-circle"
-    case "Rejected": return "mdi-close-circle"
-    default: return "mdi-clock-outline"
-  }
+  if (!status) return "mdi-close-outline"
+  if (status === "OUT") return "mdi-check-circle"
+  if (status === "UNUSUAL_CHECKIN") return "mdi-alert-circle"
+  return "mdi-clock-outline"
 }
 
 onMounted(() => {

@@ -20,7 +20,7 @@
     <v-spacer></v-spacer>
 
     <!-- Navigation Menu -->
-    <nav class="d-flex align-center">
+    <nav v-if="isLoggedIn"  class="d-flex align-center">
       <v-btn
         v-for="item in navigationItems"
         :key="item.name"
@@ -123,11 +123,14 @@ export default {
       router.push({ name: 'Login' })
     }
 
+    const isLoggedIn = computed(() => authStore.isAuthenticated)
+
     return {
       navigationItems,
       navigateTo,
       isActiveRoute,
-      logout
+      logout,
+      isLoggedIn
     }
   }
 }

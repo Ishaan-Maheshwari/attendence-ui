@@ -48,7 +48,7 @@
           <v-card-text class="pa-6">
             <div class="d-flex align-center justify-space-between">
               <div>
-                <p class="text-caption text-medium-emphasis mb-1">Incoherent Punches</p>
+                <p class="text-caption text-medium-emphasis mb-1">Inconsistent Punches</p>
                 <h2 class="text-h3 font-weight-bold text-warning">{{ exceptionsCount }}</h2>
               </div>
               <v-avatar size="56" color="warning" variant="tonal">
@@ -170,6 +170,7 @@
           <v-card-text class="pa-0">
             <v-list class="py-0" max-height="400" style="overflow-y: auto">
               <template v-for="(exception, index) in exceptions" :key="exception.id">
+
                 <v-list-item class="px-6 py-4">
                   <template v-slot:prepend>
                     <v-avatar size="32" :color="getExceptionColor(exception.status)">
@@ -182,18 +183,39 @@
                   </v-list-item-title>
                   
                   <v-list-item-subtitle>
-                    <div class="mt-1">
+                    <div class="d-flex align-center flex-wrap mt-1" style="gap: 8px;">
                       <v-chip 
                         size="x-small" 
                         :color="getExceptionColor(exception.status)"
                         variant="tonal"
-                        class="mb-1"
+                        class="mb-0"
                       >
                         {{ formatStatus(exception.status) }}
                       </v-chip>
-                      <p class="text-caption mt-1">{{ formatDate(exception.start_date) }}</p>
+                      <p class="text-caption mb-0" style="white-space: nowrap;">
+                        {{ formatDate(exception.start_date) }}
+                      </p>
                     </div>
                   </v-list-item-subtitle>
+
+                  <template v-slot:append>
+                    <v-list-item-action class="flex-column align-end">
+                      <v-btn 
+                        class="pa-2"
+                        size="small"
+                        variant="tonal" 
+                        color="indigo-darken-2"
+                        rounded="lg"
+                        @click="regularise(exception.id)"
+                        block
+                      >
+                      <v-icon size="16" class="mr-2">mdi-hammer-wrench</v-icon>
+                      Regularise
+                    </v-btn>
+                    </v-list-item-action>
+                    
+                  </template>
+
                 </v-list-item>
                 
                 <v-divider v-if="index < exceptions.length - 1"></v-divider>
@@ -210,7 +232,7 @@
         <!-- Export Report Card -->
         <v-card elevation="2">
           <v-card-title class="pa-6 pb-4">
-            <h3 class="text-h6 font-weight-bold">Export Reports</h3>
+            <h3 class="text-h6 font-weight-bold">Export Report</h3>
             <p class="text-caption text-medium-emphasis mt-1">Download attendance records</p>
           </v-card-title>
 
@@ -508,7 +530,6 @@ const formatDateTime = (dateTimeString) => {
 const formatDateFromTimestamp = (timestamp) => {
   if (!timestamp) return '-'
   const date = new Date(timestamp)
-  console.log(date)
   return date.toLocaleDateString('en-GB', { 
     day: '2-digit', 
     month: 'short', 
@@ -517,14 +538,14 @@ const formatDateFromTimestamp = (timestamp) => {
 }
 
 const formatDuration = (hours) => {
-  if (!hours) return '-'
+  if (!hours) return 'working in'
   const h = Math.floor(hours)
   const m = Math.round((hours - h) * 60)
   return `${h}h ${m}m`
 }
 
 const getDurationColor = (hours) => {
-  if (!hours) return 'grey'
+  if (!hours) return 'info'
   if (hours < 4) return 'error'
   if (hours < 8) return 'warning'
   return 'success'
@@ -532,15 +553,15 @@ const getDurationColor = (hours) => {
 
 const getExceptionColor = (status) => {
   if (!status) return 'grey'
-  if (status.includes('MISSED_CHECKOUT')) return 'error'
-  if (status.includes('SUS_CHECKOUT')) return 'warning'
+  if (status === 'MISSED_CHECKOUT') return 'error'
+  if (status === 'UNUSUAL_CHECKIN') return 'warning'
   return 'info'
 }
 
 const getExceptionIcon = (status) => {
   if (!status) return 'mdi-help-circle'
-  if (status.includes('MISSED_CHECKOUT')) return 'mdi-logout-variant'
-  if (status.includes('SUS_CHECKOUT')) return 'mdi-clock-alert'
+  if (status === 'MISSED_CHECKOUT') return 'mdi-clock-alert'
+  if (status === 'SUS_CHECKOUT') return 'mdi-clock-alert'
   return 'mdi-alert-circle'
 }
 
