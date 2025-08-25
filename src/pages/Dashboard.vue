@@ -48,7 +48,7 @@
           <v-card-text class="pa-6">
             <div class="d-flex align-center justify-space-between">
               <div>
-                <p class="text-caption text-medium-emphasis mb-1">Exceptions</p>
+                <p class="text-caption text-medium-emphasis mb-1">Incoherent Punches</p>
                 <h2 class="text-h3 font-weight-bold text-warning">{{ exceptionsCount }}</h2>
               </div>
               <v-avatar size="56" color="warning" variant="tonal">
@@ -81,7 +81,7 @@
     <!-- Main Content Row -->
     <v-row>
       <!-- Today's Attendance Table -->
-      <v-col cols="12" lg="8">
+      <v-col cols="12" lg="6">
         <v-card elevation="2">
           <v-card-title class="pa-6 pb-4">
             <div class="d-flex align-center justify-space-between w-100">
@@ -119,10 +119,10 @@
                 </div>
               </template>
 
-              <template v-slot:item.start_time="{ item }">
+              <template v-slot:item.check_in="{ item }">
                 <div>
-                  <p class="font-weight-medium mb-0">{{ formatTime(item.start_time) }}</p>
-                  <p class="text-caption text-medium-emphasis">{{ formatDate(item.start_date) }}</p>
+                  <p class="font-weight-medium mb-0"> {{ formatTime(item.check_in) }}</p>
+                  <p class="text-caption text-medium-emphasis">{{ formatDateFromTimestamp(item.check_in) }}</p>
                 </div>
               </template>
 
@@ -148,7 +148,7 @@
       </v-col>
 
       <!-- Right Sidebar -->
-      <v-col cols="12" lg="4">
+      <v-col cols="12" lg="6">
         <!-- Exception Panel -->
         <v-card elevation="2" class="mb-6">
           <v-card-title class="pa-6 pb-4">
@@ -247,6 +247,7 @@
                     block
                     :loading="loading.export"
                     prepend-icon="mdi-download"
+                    disabled="true"
                   >
                     Export Report
                   </v-btn>
@@ -286,7 +287,7 @@ const exportForm = ref({
 // Table headers
 const attendanceHeaders = [
   { title: 'Employee', value: 'emp_id', sortable: false },
-  { title: 'Check-in Time', value: 'start_time' },
+  { title: 'Check-in Time', value: 'check_in' },
   { title: 'Duration', value: 'duration' }
 ]
 
@@ -465,29 +466,53 @@ const getInitials = (name) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase()
 }
 
-const formatTime = (timeString) => {
-  if (!timeString) return '-'
-  return new Date(timeString).toLocaleTimeString('en-US', { 
+const formatTime = (timeStr) => {
+  if (!timeStr) return ""
+  // Handle full datetime format "YYYY-MM-DD HH:MM:SS"
+  const date = new Date(timeStr)
+  return date.toLocaleTimeString([], { 
     hour: '2-digit', 
-    minute: '2-digit' 
+    minute: '2-digit',
+    hour12: true 
   })
 }
 
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric'
+const formatDate = (dateStr) => {
+  if (!dateStr) return ""
+  // Handle DD-MM-YYYY format
+  const [day, month, year] = dateStr.split('-')
+  const date = new Date(year, month - 1, day) // month is 0-indexed
+  return date.toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
   })
 }
+
+
 
 const formatDateTime = (dateTimeString) => {
   if (!dateTimeString) return '-'
-  return new Date(dateTimeString).toLocaleString('en-US', {
-    month: 'short',
+  const [date, time] = dateTimeString.split(' ')
+  const [year, month, day] = date.split('-')
+  const [hour, minute, second] = time.split(':')
+  const dateObj = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`)
+  return dateObj.toLocaleString('en-US', {
+    month: 'numeric',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
+  })
+}
+
+const formatDateFromTimestamp = (timestamp) => {
+  if (!timestamp) return '-'
+  const date = new Date(timestamp)
+  console.log(date)
+  return date.toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
   })
 }
 

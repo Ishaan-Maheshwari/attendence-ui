@@ -41,7 +41,7 @@
           </div>
 
           <!-- Search Section -->
-          <div class="pa-6 pt-0">
+          <div class="pa-4 pt-2">
             <v-text-field
               v-model="search"
               label="Search employees..."
@@ -183,9 +183,9 @@
                 Edit
               </v-btn> -->
               <v-btn
-                color="info"
-                variant="tonal"
-                class="flex-1"
+                color="secondary"
+                variant="flat"
+                class="font-weight-medium px-4"
                 @click="viewAttendanceRecords(selectedEmployee.id)"
                 prepend-icon="mdi-calendar-clock"
                 rounded="lg"
@@ -213,9 +213,9 @@
             <div class="d-flex gap-3 mb-6">
               <v-btn
                 v-if="!isEditing"
-                color="secondary"
-                variant="flat"
-                class="font-weight-medium px-4"
+                color="info"
+                variant="tonal"
+                class="flex-1"
                 @click="isEditing = true"
                 prepend-icon="mdi-pencil"
                 rounded="lg"

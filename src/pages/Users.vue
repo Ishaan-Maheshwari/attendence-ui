@@ -1,245 +1,254 @@
-<style scoped>
-.users-table :deep(.v-data-table__tr:hover),
-.roles-table :deep(.v-data-table__tr:hover) {
-  background-color: rgba(0, 0, 0, 0.04) !important;
-  cursor: pointer;
-}
+<template>
+  <v-container fluid class="px-6 py-8" style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); min-height: 100vh;">
+    <!-- Header Section -->
+    <!-- <div class="text-center mb-8">
+      <div class="d-flex align-center justify-center mb-3">
+        <v-icon size="40" color="primary" class="mr-3">mdi-account-supervisor</v-icon>
+        <h1 class="text-h3 font-weight-light text-grey-darken-3">User Management</h1>
+      </div>
+      <p class="text-body-1 text-grey-darken-1 max-w-md mx-auto">
+        Manage users, roles and permissions with comprehensive control
+      </p>
+    </div> -->
 
-.user-details-form :deep(.v-field--disabled),
-.role-details-form :deep(.v-field--disabled) {
-  opacity: 0.8;
-}
+    <!-- Navigation Tabs -->
+    <v-card class="mb-6 elevation-0" style="border: 1px solid #e0e0e0;">
+      <v-tabs v-model="activeTab" color="primary" class="px-4">
+        <v-tab value="users" class="font-weight-medium">
+          <v-icon start size="20">mdi-account-multiple</v-icon>
+          Users
+          <v-chip size="x-small" color="grey-lighten-2" class="ml-2">{{ users.length }}</v-chip>
+        </v-tab>
+        <v-tab value="roles" class="font-weight-medium">
+          <v-icon start size="20">mdi-shield-account</v-icon>
+          Roles
+          <v-chip size="x-small" color="grey-lighten-2" class="ml-2">{{ roles.length }}</v-chip>
+        </v-tab>
+      </v-tabs>
+    </v-card>
 
-.new-user-form :deep(.v-field__outline),
-.new-role-form :deep(.v-field__outline) {
-  --v-field-border-opacity: 0.3;
-}
-
-.new-user-form :deep(.v-field--focused .v-field__outline),
-.new-role-form :deep(.v-field--focused .v-field__outline) {
-  --v-field-border-opacity: 1;
-}
-
-:deep(.v-card) {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:deep(.v-btn) {
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-:deep(.v-tabs .v-btn) {
-  text-transform: none;
-}
-</style><template>
-  <v-container fluid class="pa-6" style="background-color: #fafafa; min-height: 100vh;">
-    <!-- Header -->
-    <v-row class="mb-6">
-      <v-col cols="12">
-        <div class="text-center">
-          <h1 class="text-h3 font-weight-light text-grey-darken-2 mb-2">
-            <v-icon large class="mr-3" color="grey-darken-1">mdi-account-supervisor</v-icon>
-            User Management System
-          </h1>
-          <p class="text-subtitle-1 text-grey">Manage users, roles and permissions</p>
-        </div>
-      </v-col>
-    </v-row>
-
-    <!-- Tabs -->
-    <v-row class="mb-4">
-      <v-col cols="12">
-        <v-tabs v-model="activeTab" color="grey-darken-2" class="mb-4">
-          <v-tab value="users">
-            <v-icon start>mdi-account-multiple</v-icon>
-            Users
-          </v-tab>
-          <v-tab value="roles">
-            <v-icon start>mdi-shield-account</v-icon>
-            Roles
-          </v-tab>
-        </v-tabs>
-      </v-col>
-    </v-row>
-
-    <!-- Users Tab -->
+    <!-- Tab Content -->
     <v-window v-model="activeTab">
+      <!-- Users Tab -->
       <v-window-item value="users">
-        <v-row>
-          <!-- Left Column: Users Table -->
-          <v-col cols="12" md="7">
-            <v-card elevation="2" class="rounded-lg overflow-hidden">
-              <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-                <div class="d-flex align-center w-100">
-                  <v-icon large color="grey-darken-1" class="mr-3">mdi-account-multiple</v-icon>
-                  <span class="text-h5 font-weight-medium text-grey-darken-2">Users</span>
-                  <v-spacer></v-spacer>
-                  <v-btn 
-                    color="grey-darken-2" 
-                    variant="elevated"
-                    class="font-weight-medium px-6"
-                    @click="openNewUserDialog"
-                    prepend-icon="mdi-plus"
+        <!-- Filters Section -->
+        <v-card class="mb-6 elevation-0" style="border: 1px solid #e0e0e0;">
+          <v-card-text class="pa-6">
+            <v-row align="center">
+              <v-col cols="12" md="4">
+                <v-text-field
+                  v-model="userSearch"
+                  label="Search users..."
+                  prepend-inner-icon="mdi-magnify"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                  color="primary"
+                  class="search-field"
+                />
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-select
+                  v-model="roleFilter"
+                  :items="roleFilterOptions"
+                  item-title="title"
+                  item-value="value"
+                  label="Filter by role"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                  color="primary"
+                  prepend-inner-icon="mdi-shield-account"
+                />
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-select
+                  v-model="statusFilter"
+                  :items="[{title: 'Active', value: 'active'}, {title: 'Inactive', value: 'inactive'}]"
+                  item-title="title"
+                  item-value="value"
+                  label="Filter by status"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                  color="primary"
+                  prepend-inner-icon="mdi-account-check"
+                />
+              </v-col>
+              <v-col cols="12" md="2">
+                <div class="d-flex gap-2">
+                  <v-btn
+                    color="grey-lighten-1"
+                    variant="outlined"
+                    @click="clearUserFilters"
+                    size="small"
+                    class="flex-grow-1"
                   >
-                    Add User
+                    <v-icon size="16" class="mr-1">mdi-filter-off</v-icon>
+                    Clear
                   </v-btn>
+                  <v-btn
+                    color="primary"
+                    variant="elevated"
+                    @click="openNewUserDialog"
+                    size="small"
+                  >
+                    <v-icon size="16">mdi-plus</v-icon>
+                  </v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
+        <v-row>
+          <!-- Users Table -->
+          <v-col cols="12" :md="selectedUser ? 8 : 12">
+            <v-card class="elevation-0" style="border: 1px solid #e0e0e0;">
+              <v-card-title class="pa-6 bg-white">
+                <div class="d-flex align-center justify-between w-100">
+                  <div class="d-flex align-center">
+                    <v-icon color="primary" class="mr-3">mdi-account-multiple</v-icon>
+                    <span class="text-h6 font-weight-medium">Users</span>
+                    <v-chip size="small" color="grey-lighten-2" class="ml-3">
+                      {{ filteredUsers.length }} total
+                    </v-chip>
+                  </div>
                 </div>
               </v-card-title>
               
-              <v-card-text class="pa-0">
-                <!-- Search Bar -->
-                <div class="pa-4 bg-white">
-                  <v-row>
-                    <v-col cols="12" md="8">
-                      <v-text-field
-                        v-model="userSearch"
-                        label="Search users..."
-                        prepend-inner-icon="mdi-magnify"
-                        variant="outlined"
-                        density="comfortable"
-                        hide-details
-                        class="rounded-lg"
-                        color="grey-darken-2"
-                      />
-                    </v-col>
-                    <v-col cols="12" md="4">
-                      <v-select
-                        v-model="roleFilter"
-                        :items="roleFilterOptions"
-                        label="Filter by Role"
-                        variant="outlined"
-                        density="comfortable"
-                        hide-details
-                        clearable
-                        color="grey-darken-2"
-                      />
-                    </v-col>
-                  </v-row>
-                </div>
-
-                <v-data-table
-                  :headers="userHeaders"
-                  :items="filteredUsers"
-                  item-key="id"
-                  @click:row="selectUser"
-                  hover
-                  class="users-table"
-                  :items-per-page="12"
-                >
-                  <template v-slot:item.username="{ item }">
-                    <div class="d-flex align-center py-2">
-                      <v-avatar size="36" class="mr-3" color="grey-lighten-2">
-                        <span class="text-grey-darken-2 font-weight-medium">
-                          {{ item.username.charAt(0).toUpperCase() }}
-                        </span>
-                      </v-avatar>
-                      <div>
-                        <div class="font-weight-medium">{{ item.username }}</div>
-                        <div class="text-caption text-grey">{{ item.fullname }}</div>
-                      </div>
+              <v-divider></v-divider>
+              
+              <v-data-table
+                :headers="userHeaders"
+                :items="filteredUsers"
+                item-key="id"
+                @click:row="selectUser"
+                hover
+                class="users-table elevation-0"
+                :items-per-page="12"
+                no-data-text="No users found"
+              >
+                <template v-slot:item.username="{ item }">
+                  <div class="d-flex align-center py-3">
+                    <v-avatar size="40" class="mr-3" :color="getUserColor(item.id)">
+                      <span class="text-white font-weight-medium">
+                        {{ item.username.charAt(0).toUpperCase() }}
+                      </span>
+                    </v-avatar>
+                    <div>
+                      <div class="font-weight-medium text-body-2">{{ item.username }}</div>
+                      <div class="text-caption text-grey-darken-1">{{ item.fullname }}</div>
                     </div>
-                  </template>
-                  
-                  <template v-slot:item.email="{ item }">
-                    <v-chip size="small" color="grey-lighten-4" class="text-grey-darken-1">
-                      <v-icon start size="small">mdi-email</v-icon>
-                      {{ item.email }}
-                    </v-chip>
-                  </template>
-                  
-                  <template v-slot:item.role_id="{ item }">
-                    <v-chip 
-                      size="small" 
-                      color="grey-lighten-3" 
-                      class="text-grey-darken-2"
-                    >
-                      <v-icon start size="small">mdi-shield-account</v-icon>
-                      {{ getRoleName(item.role_id) }}
-                    </v-chip>
-                  </template>
-                  
-                  <template v-slot:item.designation="{ item }">
-                    <span class="font-weight-medium">{{ item.designation }}</span>
-                  </template>
-                  
-                  <template v-slot:item.created_at="{ item }">
-                    <span class="text-body-2">{{ formatDate(item.created_at) }}</span>
-                  </template>
-                  
-                  <template v-slot:item.actions="{ item }">
+                  </div>
+                </template>
+                
+                <template v-slot:item.email="{ item }">
+                  <div class="d-flex align-center">
+                    <v-icon size="16" color="grey-darken-1" class="mr-2">mdi-email</v-icon>
+                    <span class="text-body-2">{{ item.email }}</span>
+                  </div>
+                </template>
+                
+                <template v-slot:item.role_id="{ item }">
+                  <v-chip 
+                    size="small" 
+                    :color="getRoleColor(item.role_id)"
+                    class="font-weight-medium"
+                  >
+                    <v-icon start size="16">mdi-shield-account</v-icon>
+                    {{ getRoleName(item.role_id) }}
+                  </v-chip>
+                </template>
+                
+                <template v-slot:item.designation="{ item }">
+                  <div class="d-flex align-center">
+                    <v-icon size="16" color="grey-darken-1" class="mr-2">mdi-briefcase</v-icon>
+                    <span class="text-body-2">{{ item.designation }}</span>
+                  </div>
+                </template>
+                
+                <template v-slot:item.created_at="{ item }">
+                  <span class="text-body-2 text-grey-darken-1">{{ formatDate(item.created_at) }}</span>
+                </template>
+                
+                <template v-slot:item.actions="{ item }">
+                  <div class="d-flex gap-1">
                     <v-btn
-                      icon
+                      icon="mdi-delete-outline"
                       size="small"
                       color="error"
                       variant="text"
                       @click.stop="deleteUser(item.id)"
                     >
-                      <v-icon>mdi-delete-outline</v-icon>
-                      <v-tooltip activator="parent" location="top">
-                        Delete User
-                      </v-tooltip>
+                      <v-tooltip activator="parent" location="top">Delete User</v-tooltip>
                     </v-btn>
-                  </template>
-                </v-data-table>
-              </v-card-text>
+                  </div>
+                </template>
+              </v-data-table>
             </v-card>
           </v-col>
 
-          <!-- Right Column: User Details -->
-          <v-col cols="12" md="5">
-            <v-card v-if="selectedUser" elevation="2" class="rounded-lg overflow-hidden">
-              <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-                <div class="d-flex align-center w-100">
-                  <v-icon large color="grey-darken-1" class="mr-3">
-                    {{ isEditingUser ? 'mdi-account-edit' : 'mdi-account-details' }}
-                  </v-icon>
-                  <span class="text-h5 font-weight-medium text-grey-darken-2">
-                    {{ isEditingUser ? 'Edit User' : 'User Details' }}
-                  </span>
-                  <v-spacer></v-spacer>
+          <!-- User Details Panel -->
+          <v-col cols="12" md="4" v-if="selectedUser">
+            <v-card class="elevation-0" style="border: 1px solid #e0e0e0; position: sticky; top: 20px;">
+              <v-card-title class="pa-6 bg-white">
+                <div class="d-flex align-center justify-between w-100">
+                  <div class="d-flex align-center">
+                    <v-icon color="primary" class="mr-3">
+                      {{ isEditingUser ? 'mdi-account-edit' : 'mdi-account-details' }}
+                    </v-icon>
+                    <span class="text-h6 font-weight-medium">
+                      {{ isEditingUser ? 'Edit User' : 'User Details' }}
+                    </span>
+                  </div>
                   <v-btn
-                    v-if="!isEditingUser"
-                    color="grey-darken-2"
-                    variant="elevated"
-                    class="font-weight-medium px-6"
-                    @click="isEditingUser = true"
-                    prepend-icon="mdi-pencil"
+                    icon="mdi-close"
+                    size="small"
+                    variant="text"
+                    color="grey"
+                    @click="selectedUser = null; isEditingUser = false"
                   >
-                    Edit
                   </v-btn>
                 </div>
               </v-card-title>
               
+              <v-divider></v-divider>
+              
               <v-card-text class="pa-6">
-                <!-- User Avatar and Basic Info -->
+                <!-- User Header -->
                 <div class="text-center mb-6">
-                  <v-avatar size="80" color="grey-lighten-2" class="mb-3">
-                    <span class="text-h3 font-weight-bold text-grey-darken-2">
+                  <v-avatar size="64" :color="getUserColor(selectedUser.id)" class="mb-3">
+                    <span class="text-white text-h4 font-weight-bold">
                       {{ selectedUser.username.charAt(0).toUpperCase() }}
                     </span>
                   </v-avatar>
-                  <h3 class="text-h5 font-weight-medium mb-1">{{ selectedUser.fullname }}</h3>
-                  <p class="text-subtitle-1 text-grey">@{{ selectedUser.username }}</p>
+                  <h3 class="text-h6 font-weight-medium">{{ selectedUser.fullname }}</h3>
+                  <p class="text-caption text-grey-darken-1 mb-2">@{{ selectedUser.username }}</p>
                   <v-chip 
                     size="small" 
-                    color="grey-lighten-3" 
-                    class="text-grey-darken-2"
+                    :color="getRoleColor(selectedUser.role_id)"
+                    class="font-weight-medium"
                   >
+                    <v-icon start size="16">mdi-shield-account</v-icon>
                     {{ getRoleName(selectedUser.role_id) }}
                   </v-chip>
                 </div>
 
-                <v-form ref="userForm" class="user-details-form">
+                <!-- User Form -->
+                <v-form ref="userForm" class="user-form">
                   <v-text-field
                     v-model="selectedUser.username"
                     label="Username"
                     :disabled="!isEditingUser"
                     variant="outlined"
                     prepend-inner-icon="mdi-account"
-                    density="comfortable"
-                    class="mb-3"
-                    :color="isEditingUser ? 'grey-darken-2' : 'grey'"
+                    density="compact"
+                    class="mb-4"
+                    :color="isEditingUser ? 'primary' : 'grey'"
                   />
                   
                   <v-text-field
@@ -248,9 +257,9 @@
                     :disabled="!isEditingUser"
                     variant="outlined"
                     prepend-inner-icon="mdi-account-circle"
-                    density="comfortable"
-                    class="mb-3"
-                    :color="isEditingUser ? 'grey-darken-2' : 'grey'"
+                    density="compact"
+                    class="mb-4"
+                    :color="isEditingUser ? 'primary' : 'grey'"
                   />
                   
                   <v-text-field
@@ -260,9 +269,9 @@
                     :disabled="!isEditingUser"
                     variant="outlined"
                     prepend-inner-icon="mdi-email"
-                    density="comfortable"
-                    class="mb-3"
-                    :color="isEditingUser ? 'grey-darken-2' : 'grey'"
+                    density="compact"
+                    class="mb-4"
+                    :color="isEditingUser ? 'primary' : 'grey'"
                   />
                   
                   <v-text-field
@@ -271,9 +280,9 @@
                     :disabled="!isEditingUser"
                     variant="outlined"
                     prepend-inner-icon="mdi-briefcase"
-                    density="comfortable"
-                    class="mb-3"
-                    :color="isEditingUser ? 'grey-darken-2' : 'grey'"
+                    density="compact"
+                    class="mb-4"
+                    :color="isEditingUser ? 'primary' : 'grey'"
                   />
                   
                   <v-select
@@ -285,56 +294,65 @@
                     :disabled="!isEditingUser"
                     variant="outlined"
                     prepend-inner-icon="mdi-shield-account"
-                    density="comfortable"
-                    class="mb-3"
-                    :color="isEditingUser ? 'grey-darken-2' : 'grey'"
+                    density="compact"
+                    class="mb-4"
+                    :color="isEditingUser ? 'primary' : 'grey'"
                   />
 
                   <v-text-field
                     v-if="isEditingUser"
                     v-model="selectedUser.password"
-                    label="New Password (leave blank to keep current)"
+                    label="New Password (optional)"
                     type="password"
                     variant="outlined"
                     prepend-inner-icon="mdi-lock"
-                    density="comfortable"
-                    class="mb-3"
-                    color="grey-darken-2"
+                    density="compact"
+                    class="mb-4"
+                    color="primary"
+                    hint="Leave blank to keep current password"
+                    persistent-hint
                   />
                 </v-form>
               </v-card-text>
               
-              <v-card-actions v-if="isEditingUser" class="pa-6 pt-0">
-                <v-btn 
-                  color="grey-darken-2" 
-                  variant="elevated"
-                  size="large"
-                  class="flex-grow-1 mr-3"
-                  @click="updateUser"
-                  prepend-icon="mdi-check"
-                >
-                  Save Changes
-                </v-btn>
-                <v-btn 
-                  color="grey-lighten-1" 
-                  variant="outlined"
-                  size="large"
-                  class="flex-grow-1"
-                  @click="cancelUserEdit"
-                  prepend-icon="mdi-close"
-                >
-                  Cancel
-                </v-btn>
+              <!-- Action Buttons -->
+              <v-card-actions class="pa-6 pt-0">
+                <template v-if="isEditingUser">
+                  <v-btn 
+                    color="primary" 
+                    variant="elevated"
+                    size="large"
+                    class="flex-grow-1 mr-2"
+                    @click="updateUser"
+                    prepend-icon="mdi-check"
+                  >
+                    Save Changes
+                  </v-btn>
+                  <v-btn 
+                    color="grey-lighten-1" 
+                    variant="outlined"
+                    size="large"
+                    @click="cancelUserEdit"
+                    prepend-icon="mdi-close"
+                  >
+                  <v-icon start size="16">mdi-close</v-icon>
+                    Cancel
+                  </v-btn>
+                </template>
+                <template v-else>
+                  <v-btn 
+                    color="primary" 
+                    variant="elevated"
+                    size="large"
+                    class="flex-grow-1"
+                    @click="isEditingUser = true"
+                    prepend-icon="mdi-pencil"
+                  >
+                  <v-icon start size="16">mdi-pencil</v-icon>
+                    Edit User
+                  </v-btn>
+                </template>
               </v-card-actions>
-            </v-card>
-
-            <!-- Empty State Card -->
-            <v-card v-else elevation="2" class="rounded-lg text-center pa-8">
-              <v-icon size="64" color="grey-lighten-3" class="mb-4">
-                mdi-account-search
-              </v-icon>
-              <h3 class="text-h6 font-weight-medium text-grey mb-2">No User Selected</h3>
-              <p class="text-body-2 text-grey">Click on a user from the table to view their details</p>
             </v-card>
           </v-col>
         </v-row>
@@ -342,138 +360,169 @@
 
       <!-- Roles Tab -->
       <v-window-item value="roles">
+        <!-- Role Filters -->
+        <v-card class="mb-6 elevation-0" style="border: 1px solid #e0e0e0;">
+          <v-card-text class="pa-6">
+            <v-row align="center">
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="roleSearch"
+                  label="Search roles..."
+                  prepend-inner-icon="mdi-magnify"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                  color="primary"
+                  class="search-field"
+                />
+              </v-col>
+              <v-col cols="12" md="4">
+                <v-btn
+                  color="grey-lighten-1"
+                  variant="outlined"
+                  @click="clearRoleFilters"
+                  size="small"
+                >
+                  <v-icon size="16" class="mr-1">mdi-filter-off</v-icon>
+                  Clear Filters
+                </v-btn>
+              </v-col>
+              <v-col cols="12" md="2">
+                <v-btn
+                  color="primary"
+                  variant="elevated"
+                  @click="openNewRoleDialog"
+                  size="small"
+                  class="w-100"
+                >
+                  <v-icon size="16" class="mr-1">mdi-plus</v-icon>
+                  Add Role
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
         <v-row>
-          <!-- Left Column: Roles Table -->
-          <v-col cols="12" md="8">
-            <v-card elevation="2" class="rounded-lg overflow-hidden">
-              <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-                <div class="d-flex align-center w-100">
-                  <v-icon large color="grey-darken-1" class="mr-3">mdi-shield-account</v-icon>
-                  <span class="text-h5 font-weight-medium text-grey-darken-2">Roles</span>
-                  <v-spacer></v-spacer>
-                  <v-btn 
-                    color="grey-darken-2" 
-                    variant="elevated"
-                    class="font-weight-medium px-6"
-                    @click="openNewRoleDialog"
-                    prepend-icon="mdi-plus"
-                  >
-                    Add Role
-                  </v-btn>
+          <!-- Roles Table -->
+          <v-col cols="12" :md="selectedRole ? 8 : 12">
+            <v-card class="elevation-0" style="border: 1px solid #e0e0e0;">
+              <v-card-title class="pa-6 bg-white">
+                <div class="d-flex align-center justify-between w-100">
+                  <div class="d-flex align-center">
+                    <v-icon color="primary" class="mr-3">mdi-shield-account</v-icon>
+                    <span class="text-h6 font-weight-medium">Roles</span>
+                    <v-chip size="small" color="grey-lighten-2" class="ml-3">
+                      {{ filteredRoles.length }} total
+                    </v-chip>
+                  </div>
                 </div>
               </v-card-title>
               
-              <v-card-text class="pa-0">
-                <!-- Search Bar -->
-                <div class="pa-4 bg-white">
-                  <v-text-field
-                    v-model="roleSearch"
-                    label="Search roles..."
-                    prepend-inner-icon="mdi-magnify"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    class="rounded-lg"
-                    color="grey-darken-2"
-                  />
-                </div>
-
-                <v-data-table
-                  :headers="roleHeaders"
-                  :items="filteredRoles"
-                  item-key="id"
-                  @click:row="selectRole"
-                  hover
-                  class="roles-table"
-                  :items-per-page="10"
-                >
-                  <template v-slot:item.role="{ item }">
-                    <div class="d-flex align-center py-2">
-                      <v-avatar size="36" class="mr-3" color="grey-lighten-2">
-                        <v-icon color="grey-darken-2">mdi-shield-account</v-icon>
-                      </v-avatar>
-                      <span class="font-weight-medium text-h6">{{ item.role }}</span>
-                    </div>
-                  </template>
-                  
-                  <template v-slot:item.description="{ item }">
-                    <span class="text-body-2">{{ item.description }}</span>
-                  </template>
-                  
-                  <template v-slot:item.user_count="{ item }">
-                    <v-chip size="small" color="grey-lighten-4" class="text-grey-darken-1">
-                      <v-icon start size="small">mdi-account-group</v-icon>
-                      {{ getUserCount(item.id) }} users
-                    </v-chip>
-                  </template>
-                  
-                  <template v-slot:item.actions="{ item }">
+              <v-divider></v-divider>
+              
+              <v-data-table
+                :headers="roleHeaders"
+                :items="filteredRoles"
+                item-key="id"
+                @click:row="selectRole"
+                hover
+                class="roles-table elevation-0"
+                :items-per-page="10"
+                no-data-text="No roles found"
+              >
+                <template v-slot:item.role="{ item }">
+                  <div class="d-flex align-center py-3">
+                    <v-avatar size="40" class="mr-3" :color="getRoleColor(item.id)">
+                      <v-icon color="white" size="20">mdi-shield-account</v-icon>
+                    </v-avatar>
+                    <span class="font-weight-medium text-body-1">{{ item.role }}</span>
+                  </div>
+                </template>
+                
+                <template v-slot:item.description="{ item }">
+                  <span class="text-body-2 text-grey-darken-1">{{ item.description || 'No description' }}</span>
+                </template>
+                
+                <template v-slot:item.user_count="{ item }">
+                  <v-chip size="small" color="info" class="font-weight-medium">
+                    <v-icon start size="16">mdi-account-group</v-icon>
+                    {{ getUserCount(item.id) }} users
+                  </v-chip>
+                </template>
+                
+                <template v-slot:item.actions="{ item }">
+                  <div class="d-flex gap-1">
                     <v-btn
-                      icon
+                      icon="mdi-delete-outline"
                       size="small"
                       color="error"
                       variant="text"
                       @click.stop="deleteRole(item.id)"
+                      :disabled="getUserCount(item.id) > 0"
                     >
-                      <v-icon>mdi-delete-outline</v-icon>
                       <v-tooltip activator="parent" location="top">
-                        Delete Role
+                        {{ getUserCount(item.id) > 0 ? 'Cannot delete role with users' : 'Delete Role' }}
                       </v-tooltip>
                     </v-btn>
-                  </template>
-                </v-data-table>
-              </v-card-text>
+                  </div>
+                </template>
+              </v-data-table>
             </v-card>
           </v-col>
 
-          <!-- Right Column: Role Details -->
-          <v-col cols="12" md="4">
-            <v-card v-if="selectedRole" elevation="2" class="rounded-lg overflow-hidden">
-              <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-                <div class="d-flex align-center w-100">
-                  <v-icon large color="grey-darken-1" class="mr-3">
-                    {{ isEditingRole ? 'mdi-shield-edit' : 'mdi-shield-check' }}
-                  </v-icon>
-                  <span class="text-h5 font-weight-medium text-grey-darken-2">
-                    {{ isEditingRole ? 'Edit Role' : 'Role Details' }}
-                  </span>
-                  <v-spacer></v-spacer>
+          <!-- Role Details Panel -->
+          <v-col cols="12" md="4" v-if="selectedRole">
+            <v-card class="elevation-0" style="border: 1px solid #e0e0e0; position: sticky; top: 20px;">
+              <v-card-title class="pa-6 bg-white">
+                <div class="d-flex align-center justify-between w-100">
+                  <div class="d-flex align-center">
+                    <v-icon color="primary" class="mr-3">
+                      {{ isEditingRole ? 'mdi-shield-edit' : 'mdi-shield-check' }}
+                    </v-icon>
+                    <span class="text-h6 font-weight-medium">
+                      {{ isEditingRole ? 'Edit Role' : 'Role Details' }}
+                    </span>
+                  </div>
                   <v-btn
-                    v-if="!isEditingRole"
-                    color="grey-darken-2"
-                    variant="elevated"
-                    class="font-weight-medium px-6"
-                    @click="isEditingRole = true"
-                    prepend-icon="mdi-pencil"
+                    icon="mdi-close"
+                    size="small"
+                    variant="text"
+                    color="grey"
+                    @click="selectedRole = null; isEditingRole = false"
                   >
-                    Edit
                   </v-btn>
                 </div>
               </v-card-title>
               
+              <v-divider></v-divider>
+              
               <v-card-text class="pa-6">
-                <!-- Role Icon and Info -->
+                <!-- Role Header -->
                 <div class="text-center mb-6">
-                  <v-icon size="64" color="grey-lighten-2" class="mb-3">
-                    mdi-shield-account
-                  </v-icon>
-                  <h3 class="text-h5 font-weight-medium mb-1">{{ selectedRole.role }}</h3>
-                  <p class="text-subtitle-1 text-grey">Role ID: {{ selectedRole.id }}</p>
-                  <v-chip size="small" color="grey-lighten-4" class="text-grey-darken-1">
-                    {{ getUserCount(selectedRole.id) }} users assigned
+                  <v-avatar size="64" :color="getRoleColor(selectedRole.id)" class="mb-3">
+                    <v-icon color="white" size="32">mdi-shield-account</v-icon>
+                  </v-avatar>
+                  <h3 class="text-h6 font-weight-medium">{{ selectedRole.role }}</h3>
+                  <p class="text-caption text-grey-darken-1 mb-2">Role ID: {{ selectedRole.id }}</p>
+                  <v-chip size="small" color="info" class="font-weight-medium">
+                    <v-icon start size="16">mdi-account-group</v-icon>
+                    {{ getUserCount(selectedRole.id) }} users
                   </v-chip>
                 </div>
 
-                <v-form ref="roleForm" class="role-details-form">
+                <!-- Role Form -->
+                <v-form ref="roleForm" class="role-form">
                   <v-text-field
                     v-model="selectedRole.role"
                     label="Role Name"
                     :disabled="!isEditingRole"
                     variant="outlined"
                     prepend-inner-icon="mdi-shield-account"
-                    density="comfortable"
-                    class="mb-3"
-                    :color="isEditingRole ? 'grey-darken-2' : 'grey'"
+                    density="compact"
+                    class="mb-4"
+                    :color="isEditingRole ? 'primary' : 'grey'"
                   />
                   
                   <v-textarea
@@ -483,44 +532,49 @@
                     variant="outlined"
                     prepend-inner-icon="mdi-text"
                     rows="4"
-                    density="comfortable"
-                    class="mb-3"
-                    :color="isEditingRole ? 'grey-darken-2' : 'grey'"
+                    density="compact"
+                    class="mb-4"
+                    :color="isEditingRole ? 'primary' : 'grey'"
                   />
                 </v-form>
               </v-card-text>
               
-              <v-card-actions v-if="isEditingRole" class="pa-6 pt-0">
-                <v-btn 
-                  color="grey-darken-2" 
-                  variant="elevated"
-                  size="large"
-                  class="flex-grow-1 mr-3"
-                  @click="updateRole"
-                  prepend-icon="mdi-check"
-                >
-                  Save Changes
-                </v-btn>
-                <v-btn 
-                  color="grey-lighten-1" 
-                  variant="outlined"
-                  size="large"
-                  class="flex-grow-1"
-                  @click="cancelRoleEdit"
-                  prepend-icon="mdi-close"
-                >
-                  Cancel
-                </v-btn>
+              <!-- Action Buttons -->
+              <v-card-actions class="pa-6 pt-0">
+                <template v-if="isEditingRole">
+                  <v-btn 
+                    color="primary" 
+                    variant="elevated"
+                    size="large"
+                    class="flex-grow-1 mr-2"
+                    @click="updateRole"
+                    prepend-icon="mdi-check"
+                  >
+                    Save Changes
+                  </v-btn>
+                  <v-btn 
+                    color="grey-lighten-1" 
+                    variant="outlined"
+                    size="large"
+                    @click="cancelRoleEdit"
+                    prepend-icon="mdi-close"
+                  >
+                    Cancel
+                  </v-btn>
+                </template>
+                <template v-else>
+                  <v-btn 
+                    color="primary" 
+                    variant="elevated"
+                    size="large"
+                    class="flex-grow-1"
+                    @click="isEditingRole = true"
+                  >
+                   <v-icon size="18">mdi-pencil</v-icon>
+                    Edit Role
+                  </v-btn>
+                </template>
               </v-card-actions>
-            </v-card>
-
-            <!-- Empty State Card -->
-            <v-card v-else elevation="2" class="rounded-lg text-center pa-8">
-              <v-icon size="64" color="grey-lighten-3" class="mb-4">
-                mdi-shield-search
-              </v-icon>
-              <h3 class="text-h6 font-weight-medium text-grey mb-2">No Role Selected</h3>
-              <p class="text-body-2 text-grey">Click on a role from the table to view its details</p>
             </v-card>
           </v-col>
         </v-row>
@@ -528,17 +582,17 @@
     </v-window>
 
     <!-- Add User Dialog -->
-    <v-dialog v-model="newUserDialog" max-width="700px" persistent>
-      <v-card class="rounded-lg overflow-hidden">
-        <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-          <div class="d-flex align-center">
-            <v-icon large color="grey-darken-1" class="mr-3">mdi-account-plus</v-icon>
-            <span class="text-h5 font-weight-medium text-grey-darken-2">Add New User</span>
+    <v-dialog v-model="newUserDialog" max-width="600px" persistent>
+      <v-card class="elevation-8">
+        <v-card-title class="pa-6 bg-primary">
+          <div class="d-flex align-center text-white">
+            <v-icon color="white" class="mr-3">mdi-account-plus</v-icon>
+            <span class="text-h6 font-weight-medium">Add New User</span>
           </div>
         </v-card-title>
         
         <v-card-text class="pa-6">
-          <v-form ref="newUserForm" class="new-user-form">
+          <v-form ref="newUserForm">
             <v-row>
               <v-col cols="12" md="6">
                 <v-text-field 
@@ -546,8 +600,8 @@
                   label="Username" 
                   variant="outlined"
                   prepend-inner-icon="mdi-account"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
                   required
                 />
               </v-col>
@@ -557,8 +611,8 @@
                   label="Full Name" 
                   variant="outlined"
                   prepend-inner-icon="mdi-account-circle"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
                 />
               </v-col>
               <v-col cols="12">
@@ -568,8 +622,8 @@
                   type="email"
                   variant="outlined"
                   prepend-inner-icon="mdi-email"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
                   required
                 />
               </v-col>
@@ -580,19 +634,9 @@
                   type="password"
                   variant="outlined"
                   prepend-inner-icon="mdi-lock"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
                   required
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field 
-                  v-model="newUser.designation" 
-                  label="Designation" 
-                  variant="outlined"
-                  prepend-inner-icon="mdi-briefcase"
-                  density="comfortable"
-                  color="grey-darken-2"
                 />
               </v-col>
               <v-col cols="12">
@@ -604,8 +648,8 @@
                   label="Role"
                   variant="outlined"
                   prepend-inner-icon="mdi-shield-account"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
                   required
                 />
               </v-col>
@@ -615,7 +659,7 @@
         
         <v-card-actions class="pa-6 pt-0">
           <v-btn 
-            color="grey-darken-2" 
+            color="primary" 
             variant="elevated"
             size="large"
             class="flex-grow-1 mr-3"
@@ -628,7 +672,6 @@
             color="grey-lighten-1" 
             variant="outlined"
             size="large"
-            class="flex-grow-1"
             @click="newUserDialog = false"
             prepend-icon="mdi-close"
           >
@@ -640,24 +683,24 @@
 
     <!-- Add Role Dialog -->
     <v-dialog v-model="newRoleDialog" max-width="500px" persistent>
-      <v-card class="rounded-lg overflow-hidden">
-        <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-          <div class="d-flex align-center">
-            <v-icon large color="grey-darken-1" class="mr-3">mdi-shield-plus</v-icon>
-            <span class="text-h5 font-weight-medium text-grey-darken-2">Add New Role</span>
+      <v-card class="elevation-8">
+        <v-card-title class="pa-6 bg-primary">
+          <div class="d-flex align-center text-white">
+            <v-icon color="white" class="mr-3">mdi-shield-plus</v-icon>
+            <span class="text-h6 font-weight-medium">Add New Role</span>
           </div>
         </v-card-title>
         
         <v-card-text class="pa-6">
-          <v-form ref="newRoleForm" class="new-role-form">
+          <v-form ref="newRoleForm">
             <v-text-field 
               v-model="newRole.role" 
               label="Role Name" 
               variant="outlined"
               prepend-inner-icon="mdi-shield-account"
-              density="comfortable"
-              color="grey-darken-2"
-              class="mb-3"
+              density="compact"
+              color="primary"
+              class="mb-4"
               required
             />
             <v-textarea 
@@ -666,15 +709,15 @@
               variant="outlined"
               prepend-inner-icon="mdi-text"
               rows="4"
-              density="comfortable"
-              color="grey-darken-2"
+              density="compact"
+              color="primary"
             />
           </v-form>
         </v-card-text>
         
         <v-card-actions class="pa-6 pt-0">
           <v-btn 
-            color="grey-darken-2" 
+            color="primary" 
             variant="elevated"
             size="large"
             class="flex-grow-1 mr-3"
@@ -687,7 +730,6 @@
             color="grey-lighten-1" 
             variant="outlined"
             size="large"
-            class="flex-grow-1"
             @click="newRoleDialog = false"
             prepend-icon="mdi-close"
           >
@@ -712,6 +754,7 @@ const selectedUser = ref(null)
 const isEditingUser = ref(false)
 const userSearch = ref("")
 const roleFilter = ref("")
+const statusFilter = ref("")
 
 // Roles data
 const roles = ref([])
@@ -725,19 +768,17 @@ const newRoleDialog = ref(false)
 
 // Headers
 const userHeaders = [
-  { title: "Username", key: "username", width: "200px" },
-  { title: "Email", key: "email", width: "200px" },
-  { title: "Role", key: "role_id", width: "150px" },
-  { title: "Designation", key: "designation", width: "150px" },
-  { title: "Created", key: "created_at", width: "120px" },
-  { title: "Actions", key: "actions", sortable: false, width: "80px" },
+  { title: "User", key: "username", width: "250px", sortable: true },
+  { title: "Email", key: "email", width: "200px", sortable: true },
+  { title: "Role", key: "role_id", width: "150px", sortable: true },
+  { title: "Actions", key: "actions", sortable: false, width: "80px", align: "center" },
 ]
 
 const roleHeaders = [
-  { title: "Role", key: "role", width: "200px" },
-  { title: "Description", key: "description" },
-  { title: "Users", key: "user_count", width: "120px" },
-  { title: "Actions", key: "actions", sortable: false, width: "80px" },
+  { title: "Role", key: "role", width: "200px", sortable: true },
+  { title: "Description", key: "description", sortable: true },
+  { title: "Users", key: "user_count", width: "120px", sortable: false },
+  { title: "Actions", key: "actions", sortable: false, width: "80px", align: "center" },
 ]
 
 // New user/role objects
@@ -746,7 +787,6 @@ const newUser = ref({
   fullname: "",
   email: "",
   password: "",
-  designation: "",
   role_id: "",
 })
 
@@ -767,6 +807,7 @@ const roleFilterOptions = computed(() =>
 const filteredUsers = computed(() => {
   let filtered = users.value
 
+  // Search filter
   if (userSearch.value) {
     const searchLower = userSearch.value.toLowerCase()
     filtered = filtered.filter(user => 
@@ -776,11 +817,18 @@ const filteredUsers = computed(() => {
     )
   }
 
+  // Role filter
   if (roleFilter.value) {
     filtered = filtered.filter(user => user.role_id === roleFilter.value)
   }
 
-  return filtered
+  // Status filter (if you have status field)
+  if (statusFilter.value) {
+    // Implement status filtering based on your data structure
+    // filtered = filtered.filter(user => user.status === statusFilter.value)
+  }
+
+  return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 })
 
 const filteredRoles = computed(() => {
@@ -817,18 +865,202 @@ const fetchRoles = async () => {
   }
 }
 
+const selectUser = async (event, { item }) => {
+  try {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }
+    const res = await axios.get(`/api/users/${item.id}`, config)
+    selectedUser.value = res.data
+    isEditingUser.value = false
+  } catch (error) {
+    console.error("Error fetching user details:", error)
+    selectedUser.value = item
+    isEditingUser.value = false
+  }
+}
+
+const selectRole = async (event, { item }) => {
+  try {
+    const res = await axios.get(`/api/roles/${item.id}`)
+    selectedRole.value = res.data
+    isEditingRole.value = false
+  } catch (error) {
+    console.error("Error fetching role details:", error)
+    selectedRole.value = item
+    isEditingRole.value = false
+  }
+}
+
+const updateUser = async () => {
+  try {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }
+    await axios.put(`/api/users/${selectedUser.value.id}`, selectedUser.value, config)
+    isEditingUser.value = false
+    await fetchUsers()
+  } catch (error) {
+    console.error("Error updating user:", error)
+  }
+}
+
+const updateRole = async () => {
+  try {
+    await axios.put(`/api/roles/${selectedRole.value.id}`, selectedRole.value)
+    isEditingRole.value = false
+    await fetchRoles()
+  } catch (error) {
+    console.error("Error updating role:", error)
+  }
+}
+
+const deleteUser = async (id) => {
+  if (confirm("Are you sure you want to delete this user?")) {
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+      await axios.delete(`/api/users/${id}`, config)
+      await fetchUsers()
+      if (selectedUser.value?.id === id) {
+        selectedUser.value = null
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error)
+    }
+  }
+}
+
+const deleteRole = async (id) => {
+  if (getUserCount(id) > 0) {
+    alert("Cannot delete role that has users assigned to it.")
+    return
+  }
+  
+  if (confirm("Are you sure you want to delete this role?")) {
+    try {
+      await axios.delete(`/api/roles/${id}`)
+      await fetchRoles()
+      if (selectedRole.value?.id === id) {
+        selectedRole.value = null
+      }
+    } catch (error) {
+      console.error("Error deleting role:", error)
+    }
+  }
+}
+
+const openNewUserDialog = () => {
+  newUser.value = {
+    username: "",
+    fullname: "",
+    email: "",
+    password: "",
+    role_id: "",
+  }
+  newUserDialog.value = true
+}
+
+const openNewRoleDialog = () => {
+  newRole.value = {
+    role: "",
+    description: "",
+  }
+  newRoleDialog.value = true
+}
+
+const createUser = async () => {
+  try {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }
+    await axios.post("/api/users/new", newUser.value, config)
+    newUserDialog.value = false
+    await fetchUsers()
+  } catch (error) {
+    console.error("Error creating user:", error)
+  }
+}
+
+const createRole = async () => {
+  try {
+    await axios.post("/api/roles/new", newRole.value)
+    newRoleDialog.value = false
+    await fetchRoles()
+  } catch (error) {
+    console.error("Error creating role:", error)
+  }
+}
+
+const cancelUserEdit = async () => {
+  if (selectedUser.value) {
+    await selectUser(null, { item: selectedUser.value })
+  }
+  isEditingUser.value = false
+}
+
+const cancelRoleEdit = async () => {
+  if (selectedRole.value) {
+    await selectRole(null, { item: selectedRole.value })
+  }
+  isEditingRole.value = false
+}
+
+const clearUserFilters = () => {
+  userSearch.value = ""
+  roleFilter.value = ""
+  statusFilter.value = ""
+}
+
+const clearRoleFilters = () => {
+  roleSearch.value = ""
+}
+
+// Helper functions
 const getUserCount = (roleId) => {
   return users.value.filter(user => user.role_id === roleId).length
 }
 
 const getRoleName = (roleId) => {
   const role = roles.value.find(role => role.id === roleId)
-  return role ? role.role : ""
+  return role ? role.role : "Unknown"
 }
 
-const formatDate = (date) => {
-  const options = { year: "numeric", month: "long", day: "numeric" }
-  return new Date(date).toLocaleDateString(undefined, options)
+const getUserColor = (userId) => {
+  const colors = ['primary', 'secondary', 'success', 'info', 'warning', 'error']
+  const hash = userId.toString().split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0)
+    return a & a
+  }, 0)
+  return colors[Math.abs(hash) % colors.length]
+}
+
+const getRoleColor = (roleId) => {
+  const colors = ['deep-purple', 'indigo', 'blue', 'teal', 'green', 'orange']
+  // const hash = roleId.toString().split('').reduce((a, b) => {
+  //   a = ((a << 5) - a) + b.charCodeAt(0)
+  //   return a & a
+  // }, 0)
+  // return colors[Math.abs(hash) % colors.length]
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ""
+  return new Date(dateStr).toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
+  })
 }
 
 // Lifecycle hooks
@@ -837,3 +1069,51 @@ onMounted(() => {
   fetchRoles()
 })
 </script>
+
+<style scoped>
+.users-table :deep(.v-data-table__tr),
+.roles-table :deep(.v-data-table__tr) {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.users-table :deep(.v-data-table__tr:hover),
+.roles-table :deep(.v-data-table__tr:hover) {
+  background-color: rgba(25, 118, 210, 0.04) !important;
+}
+
+.search-field :deep(.v-field__outline) {
+  border-radius: 12px;
+}
+
+.user-form :deep(.v-field--disabled .v-field__overlay),
+.role-form :deep(.v-field--disabled .v-field__overlay) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+:deep(.v-card) {
+  border-radius: 12px !important;
+}
+
+:deep(.v-btn) {
+  text-transform: none;
+  letter-spacing: 0;
+  border-radius: 8px;
+}
+
+:deep(.v-chip) {
+  border-radius: 8px;
+}
+
+:deep(.v-tabs .v-btn) {
+  text-transform: none;
+}
+
+.max-w-md {
+  max-width: 28rem;
+}
+
+.max-w-sm {
+  max-width: 20rem;
+}
+</style>

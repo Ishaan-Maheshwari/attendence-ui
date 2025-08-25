@@ -1,317 +1,359 @@
 <template>
-  <v-container fluid class="pa-6" style="background-color: #fafafa; min-height: 100vh;">
-    <!-- Header -->
-    <v-row class="mb-6">
-      <v-col cols="12">
-        <div class="text-center">
-          <h1 class="text-h3 font-weight-light text-grey-darken-2 mb-2">
-            <v-icon large class="mr-3" color="grey-darken-1">mdi-clock-outline</v-icon>
-            Time Records Management
-          </h1>
-          <p class="text-subtitle-1 text-grey">Track and manage employee time records</p>
-        </div>
-      </v-col>
-    </v-row>
+  <v-container fluid class="px-6 py-8" style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); min-height: 100vh;">
+    <!-- Header Section -->
+    <!-- <div class="text-center mb-12">
+      <div class="d-flex align-center justify-center mb-3">
+        <v-icon size="40" color="primary" class="mr-3">mdi-clock-time-four-outline</v-icon>
+        <h1 class="text-h3 font-weight-light text-grey-darken-3">Time Records</h1>
+      </div>
+      <p class="text-body-1 text-grey-darken-1  mx-auto">
+        Track, manage and regularize employee time records with ease
+      </p>
+    </div> -->
+
+    <!-- Filters Section -->
+    <v-card class="mb-6 elevation-0" style="border: 1px solid #e0e0e0;">
+      <v-card-text class="pa-6">
+        <v-row align="center">
+          <v-col cols="12" md="3">
+            <v-text-field
+              v-model="search"
+              label="Search by employee..."
+              prepend-inner-icon="mdi-magnify"
+              variant="outlined"
+              density="compact"
+              hide-details
+              clearable
+              color="primary"
+              class="search-field"
+            />
+          </v-col>
+          <!-- <v-col cols="12" md="2">
+            <v-select
+              v-model="statusFilter"
+              :items="statusOptions"
+              label="Status"
+              variant="outlined"
+              density="compact"
+              hide-details
+              clearable
+              color="primary"
+              prepend-inner-icon="mdi-check-circle-outline"
+            />
+          </v-col> -->
+          <v-col cols="12" md="2">
+            <v-text-field
+              v-model="dateFilter"
+              label="Date"
+              type="date"
+              variant="outlined"
+              density="compact"
+              hide-details
+              clearable
+              color="primary"
+              prepend-inner-icon="mdi-calendar"
+            />
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="employeeFilter"
+              :items="employeeOptions"
+              item-title="name"
+              item-value="id"
+              label="Filter by employee"
+              variant="outlined"
+              density="compact"
+              hide-details
+              clearable
+              color="primary"
+              prepend-inner-icon="mdi-account"
+            />
+          </v-col>
+          <v-col cols="12" md="2">
+            <!-- <div class="d-flex gap-2"> -->
+              <v-btn
+                color="grey-lighten-1"
+                variant="outlined"
+                @click="clearFilters"
+                size="small"
+                class="flex-grow-1"
+              >
+                <v-icon size="16" class="mr-1">mdi-filter-off</v-icon>
+                Clear
+              </v-btn>
+            </v-col>
+            <v-col cols="12" md="2">
+              <v-btn
+                color="primary"
+                variant="tonal"
+                @click="openNewRecordDialog"
+                
+              >
+                <v-icon size="18">mdi-plus</v-icon>
+                Add New Record
+              </v-btn>
+            <!-- </div> -->
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
     <v-row>
-      <!-- Left Column: Records Table -->
-      <v-col cols="12" md="8">
-        <v-card elevation="2" class="rounded-lg overflow-hidden">
-          <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-            <div class="d-flex align-center w-100">
-              <v-icon large color="grey-darken-1" class="mr-3">mdi-table-clock</v-icon>
-              <span class="text-h5 font-weight-medium text-grey-darken-2">Time Records</span>
-              <v-spacer></v-spacer>
-              <v-btn 
-                color="grey-darken-2" 
-                variant="elevated"
-                class="font-weight-medium px-6"
-                @click="openNewRecordDialog"
-                prepend-icon="mdi-plus"
-              >
-                Add Record
-              </v-btn>
+      <!-- Records Table -->
+      <v-col cols="12" :md="selectedRecord ? 8 : 12">
+        <v-card class="elevation-0" style="border: 1px solid #e0e0e0;">
+          <v-card-title class="pa-6 bg-white">
+            <div class="d-flex align-center justify-between w-100">
+              <div class="d-flex align-center">
+                <v-icon color="primary" class="mr-3">mdi-table-large</v-icon>
+                <span class="text-h6 font-weight-medium">Records</span>
+                <v-chip size="small" color="grey-lighten-2" class="ml-3">
+                  {{ filteredRecords.length }} total
+                </v-chip>
+              </div>
             </div>
           </v-card-title>
           
-          <v-card-text class="pa-0">
-            <!-- Filters Bar -->
-            <div class="pa-4 bg-white">
-              <v-row>
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="search"
-                    label="Search records..."
-                    prepend-inner-icon="mdi-magnify"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    class="rounded-lg"
-                    color="grey-darken-2"
-                  />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-select
-                    v-model="statusFilter"
-                    :items="statusOptions"
-                    label="Filter by Status"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    clearable
-                    color="grey-darken-2"
-                  />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-text-field
-                    v-model="dateFilter"
-                    label="Filter by Date"
-                    type="date"
-                    variant="outlined"
-                    density="comfortable"
-                    hide-details
-                    clearable
-                    color="grey-darken-2"
-                  />
-                </v-col>
-                <v-col cols="12" md="2">
-                  <v-btn
-                    color="grey-lighten-1"
-                    variant="outlined"
-                    block
-                    @click="clearFilters"
-                  >
-                    Clear
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </div>
-
-            <v-data-table
-              :headers="headers"
-              :items="filteredRecords"
-              item-key="id"
-              @click:row="selectRecord"
-              hover
-              class="records-table"
-              :items-per-page="15"
-            >
-              <template v-slot:item.emp_id="{ item }">
-                <div class="d-flex align-center py-2">
-                  <v-avatar size="32" class="mr-3" color="grey-lighten-2">
-                    <span class="text-grey-darken-2 font-weight-medium text-caption">
-                      {{ getEmployeeName(item.emp_id).charAt(0).toUpperCase() }}
-                    </span>
-                  </v-avatar>
-                  <div>
-                    <div class="font-weight-medium">{{ getEmployeeName(item.emp_id) }}</div>
-                    <div class="text-caption text-grey">ID: {{ item.emp_id }}</div>
-                  </div>
+          <v-divider></v-divider>
+          
+          <v-data-table
+            :headers="headers"
+            :items="filteredRecords"
+            item-key="id"
+            @click:row="selectRecord"
+            hover
+            class="records-table elevation-0"
+            :items-per-page="15"
+            no-data-text="No records found"
+          >
+            <template v-slot:item.emp_id="{ item }">
+              <div class="d-flex align-center py-3">
+                <v-avatar size="36" class="mr-3" :color="getEmployeeColor(item.emp_id)">
+                  <span class="text-white font-weight-medium text-sm">
+                    {{ getEmployeeName(item.emp_id).charAt(0).toUpperCase() }}
+                  </span>
+                </v-avatar>
+                <div>
+                  <div class="font-weight-medium text-body-2">{{ getEmployeeName(item.emp_id) }}</div>
+                  <div class="text-caption text-grey-darken-1">{{ item.emp_id }}</div>
                 </div>
-              </template>
-              
-              <template v-slot:item.start_date="{ item }">
-                <div class="font-weight-medium">
-                  {{ formatDate(item.start_date) }}
-                </div>
-              </template>
-              
-              <template v-slot:item.start_time="{ item }">
-                <v-chip size="small" color="grey-lighten-4" class="text-grey-darken-1">
-                  <v-icon start size="small">mdi-clock-start</v-icon>
-                  {{ formatTime(item.start_time) }}
-                </v-chip>
-              </template>
-              
-              <template v-slot:item.end_time="{ item }">
-                <v-chip size="small" color="grey-lighten-3" class="text-grey-darken-2">
-                  <v-icon start size="small">mdi-clock-end</v-icon>
-                  {{ formatTime(item.end_time) }}
-                </v-chip>
-              </template>
-              
-              <template v-slot:item.duration="{ item }">
-                <div class="font-weight-medium">
-                  {{ formatDuration(item.duration) }}
-                </div>
-              </template>
-              
-              <template v-slot:item.status="{ item }">
-                <v-chip 
-                  size="small" 
-                  :color="getStatusColor(item.status)"
-                  :class="getStatusTextClass(item.status)"
+              </div>
+            </template>
+            
+            <template v-slot:item.start_date="{ item }">
+              <div class="font-weight-medium text-body-2">
+                {{ formatDate(item.start_date) }}
+              </div>
+            </template>
+            
+            <template v-slot:item.start_time="{ item }">
+              <v-chip size="small" color="green-lighten-4" class="text-green-darken-2 font-weight-medium">
+                <v-icon start size="16">mdi-play</v-icon>
+                {{ formatTime(item.start_time) }}
+              </v-chip>
+            </template>
+            
+            <template v-slot:item.end_time="{ item }">
+              <v-chip size="small" color="red-lighten-4" class="text-red-darken-2 font-weight-medium">
+                <v-icon start size="16">mdi-stop</v-icon>
+                {{ formatTime(item.end_time) }}
+              </v-chip>
+            </template>
+            
+            <template v-slot:item.duration="{ item }">
+              <div class="font-weight-medium text-body-2">
+                {{ formatDuration(item.duration) }}
+              </div>
+            </template>
+            
+            <template v-slot:item.status="{ item }">
+              <v-chip 
+                size="small" 
+                :color="getStatusColor(item.status)"
+                :class="'font-weight-medium ' + getStatusTextClass(item.status)"
+              >
+                <v-icon start size="16">{{ getStatusIcon(item.status) }}</v-icon>
+                {{ item.status }}
+              </v-chip>
+            </template>
+            
+            <template v-slot:item.actions="{ item }">
+              <div class="d-flex gap-1">
+                <v-btn
+                  icon="mdi-check"
+                  size="small"
+                  color="success"
+                  variant="text"
+                  @click.stop="approveRecord(item.id)"
+                  v-if="item.status === 'OUT'"
                 >
-                  <v-icon start size="small">{{ getStatusIcon(item.status) }}</v-icon>
-                  {{ item.status }}
-                </v-chip>
-              </template>
-              
-              <template v-slot:item.actions="{ item }">
-                <div class="d-flex">
-                  <v-btn
-                    icon
-                    size="small"
-                    color="grey-darken-1"
-                    variant="text"
-                    @click.stop="approveRecord(item.id)"
-                    v-if="item.status === 'Pending'"
-                  >
-                    <v-icon>mdi-check</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Approve Record
-                    </v-tooltip>
-                  </v-btn>
-                  <v-btn
-                    icon
-                    size="small"
-                    color="grey-darken-1"
-                    variant="text"
-                    @click.stop="rejectRecord(item.id)"
-                    v-if="item.status === 'Pending'"
-                  >
-                    <v-icon>mdi-close</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Reject Record
-                    </v-tooltip>
-                  </v-btn>
-                  <v-btn
-                    icon
-                    size="small"
-                    color="error"
-                    variant="text"
-                    @click.stop="deleteRecord(item.id)"
-                  >
-                    <v-icon>mdi-delete-outline</v-icon>
-                    <v-tooltip activator="parent" location="top">
-                      Delete Record
-                    </v-tooltip>
-                  </v-btn>
-                </div>
-              </template>
-            </v-data-table>
-          </v-card-text>
+                  <v-tooltip activator="parent" location="top">Checked Out</v-tooltip>
+                </v-btn>
+                <v-btn
+                  icon="mdi-close"
+                  size="small"
+                  color="warning"
+                  variant="text"
+                  @click.stop="rejectRecord(item.id)"
+                  v-if="item.status != 'OUT'"
+                >
+                  <v-tooltip activator="parent" location="top">Missed Checkout</v-tooltip>
+                </v-btn>
+                <v-btn
+                  size="small"
+                  color="error"
+                  variant="text"
+                  @click.stop="deleteRecord(item.id)"
+                >
+                  <v-icon size="18">mdi-delete-outline</v-icon>
+                  <v-tooltip activator="parent" location="top">Delete</v-tooltip>
+                </v-btn>
+              </div>
+            </template>
+          </v-data-table>
         </v-card>
       </v-col>
 
-      <!-- Right Column: Record Details -->
-      <v-col cols="12" md="4">
-        <v-card v-if="selectedRecord" elevation="2" class="rounded-lg overflow-hidden">
-          <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-            <div class="d-flex align-center w-100">
-              <v-icon large color="grey-darken-1" class="mr-3">
-                {{ isEditing ? 'mdi-clock-edit-outline' : 'mdi-clock-check-outline' }}
-              </v-icon>
-              <span class="text-h5 font-weight-medium text-grey-darken-2">
-                {{ isEditing ? 'Regularize' : 'Record Details' }}
-              </span>
-              <v-spacer></v-spacer>
+      <!-- Record Details Panel -->
+      <v-col cols="12" md="4" v-if="selectedRecord">
+        <v-card class="elevation-0" style="border: 1px solid #e0e0e0; position: sticky; top: 20px;">
+          <v-card-title class="pa-6 bg-white">
+            <div class="d-flex align-center justify-between w-100">
+              <div class="d-flex align-center">
+                <v-icon :color="getStatusColor(selectedRecord.status)" class="mr-3">
+                  {{ isEditing ? 'mdi-pencil' : getStatusIcon(selectedRecord.status) }}
+                </v-icon>
+                <span class="text-h6 font-weight-medium">
+                  {{ isEditing ? 'Regularize Record' : 'Record Details' }}
+                </span>
+              </div>
               <v-btn
-                v-if="!isEditing"
-                color="grey-darken-2"
-                variant="elevated"
-                class="font-weight-medium px-6"
-                @click="isEditing = true"
-                prepend-icon="mdi-pencil"
+                icon="mdi-close"
+                size="small"
+                variant="text"
+                color="grey"
+                @click="selectedRecord = null; isEditing = false"
               >
-                Edit
               </v-btn>
             </div>
           </v-card-title>
           
+          <v-divider></v-divider>
+          
           <v-card-text class="pa-6">
-            <!-- Record Status and ID -->
+            <!-- Record Header -->
             <div class="text-center mb-6">
-              <v-icon size="64" :color="getStatusColor(selectedRecord.status)" class="mb-3">
-                {{ getStatusIcon(selectedRecord.status) }}
-              </v-icon>
-              <h3 class="text-h6 font-weight-medium mb-1">Record #{{ selectedRecord.id }}</h3>
+              <div class="d-flex align-center justify-center mb-3">
+                <v-avatar size="48" :color="getEmployeeColor(selectedRecord.emp_id)" class="mr-3">
+                  <span class="text-white font-weight-bold">
+                    {{ getEmployeeName(selectedRecord.emp_id).charAt(0).toUpperCase() }}
+                  </span>
+                </v-avatar>
+                <div class="text-left">
+                  <h3 class="text-h6 font-weight-medium">{{ getEmployeeName(selectedRecord.emp_id) }}</h3>
+                  <p class="text-caption text-grey-darken-1 mb-0">Record #{{ selectedRecord.id }}</p>
+                </div>
+              </div>
               <v-chip 
                 :color="getStatusColor(selectedRecord.status)"
-                :class="getStatusTextClass(selectedRecord.status)"
+                :class="'font-weight-medium ' + getStatusTextClass(selectedRecord.status)"
+                size="small"
               >
+                <v-icon start size="16">{{ getStatusIcon(selectedRecord.status) }}</v-icon>
                 {{ selectedRecord.status }}
               </v-chip>
             </div>
 
-            <v-form ref="recordForm" class="record-details-form">
+            <!-- Record Form -->
+            <v-form ref="recordForm" class="record-form">
+              <!-- Employee (Always Disabled) -->
               <v-select
                 v-model="selectedRecord.emp_id"
                 :items="employeeOptions"
                 item-title="name"
                 item-value="id"
                 label="Employee"
-                :disabled="!isEditing"
+                disabled
                 variant="outlined"
                 prepend-inner-icon="mdi-account"
-                density="comfortable"
-                class="mb-3"
-                :color="isEditing ? 'grey-darken-2' : 'grey'"
+                density="compact"
+                class="mb-4"
+                color="grey"
               />
               
+              <!-- Date -->
               <v-text-field
                 v-model="selectedRecord.start_date"
-                label="Start Date"
+                label="Date"
                 type="date"
                 :disabled="!isEditing"
                 variant="outlined"
                 prepend-inner-icon="mdi-calendar"
-                density="comfortable"
-                class="mb-3"
-                :color="isEditing ? 'grey-darken-2' : 'grey'"
+                density="compact"
+                class="mb-4"
+                :color="isEditing ? 'primary' : 'grey'"
               />
               
-              <v-text-field
-                v-model="selectedRecord.start_time"
-                label="Start Time"
-                type="datetime-local"
-                :disabled="!isEditing"
-                variant="outlined"
-                prepend-inner-icon="mdi-clock-start"
-                density="comfortable"
-                class="mb-3"
-                :color="isEditing ? 'grey-darken-2' : 'grey'"
-              />
+              <!-- Time Fields -->
+              <v-row class="mb-4">
+                <v-col cols="6">
+                  <v-text-field
+                    v-model="selectedRecord.start_time"
+                    label="Start Time"
+                    type="time"
+                    :disabled="!isEditing"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-clock-start"
+                    density="compact"
+                    :color="isEditing ? 'primary' : 'grey'"
+                  />
+                </v-col>
+                <v-col cols="6">
+                  <v-text-field
+                    v-model="selectedRecord.end_time"
+                    label="End Time"
+                    type="time"
+                    :disabled="!isEditing"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-clock-end"
+                    density="compact"
+                    :color="isEditing ? 'primary' : 'grey'"
+                  />
+                </v-col>
+              </v-row>
               
-              <v-text-field
-                v-model="selectedRecord.end_time"
-                label="End Time"
-                type="datetime-local"
-                :disabled="!isEditing"
-                variant="outlined"
-                prepend-inner-icon="mdi-clock-end"
-                density="comfortable"
-                class="mb-3"
-                :color="isEditing ? 'grey-darken-2' : 'grey'"
-              />
+              <!-- Shift and Duration -->
+              <v-row class="mb-4">
+                <v-col cols="7">
+                  <v-select
+                    v-model="selectedRecord.shift_id"
+                    :items="shiftOptions"
+                    item-title="name"
+                    item-value="id"
+                    label="Shift"
+                    :disabled="!isEditing"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-clock-outline"
+                    density="compact"
+                    :color="isEditing ? 'primary' : 'grey'"
+                  />
+                </v-col>
+                <v-col cols="5">
+                  <v-text-field
+                    v-model="selectedRecord.duration"
+                    label="Hours"
+                    type="number"
+                    step="0.25"
+                    :disabled="!isEditing"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-timer-outline"
+                    density="compact"
+                    :color="isEditing ? 'primary' : 'grey'"
+                  />
+                </v-col>
+              </v-row>
               
-              <v-select
-                v-model="selectedRecord.shift_id"
-                :items="shiftOptions"
-                item-title="name"
-                item-value="id"
-                label="Shift"
-                :disabled="!isEditing"
-                variant="outlined"
-                prepend-inner-icon="mdi-clock-outline"
-                density="comfortable"
-                class="mb-3"
-                :color="isEditing ? 'grey-darken-2' : 'grey'"
-              />
-              
-              <v-text-field
-                v-model="selectedRecord.duration"
-                label="Duration (hours)"
-                type="number"
-                step="0.25"
-                :disabled="!isEditing"
-                variant="outlined"
-                prepend-inner-icon="mdi-timer-outline"
-                density="comfortable"
-                class="mb-3"
-                :color="isEditing ? 'grey-darken-2' : 'grey'"
-              />
-              
+              <!-- Status -->
               <v-select
                 v-model="selectedRecord.status"
                 :items="statusOptions"
@@ -319,62 +361,67 @@
                 :disabled="!isEditing"
                 variant="outlined"
                 prepend-inner-icon="mdi-check-circle-outline"
-                density="comfortable"
-                class="mb-3"
-                :color="isEditing ? 'grey-darken-2' : 'grey'"
+                density="compact"
+                class="mb-4"
+                :color="isEditing ? 'primary' : 'grey'"
               />
             </v-form>
           </v-card-text>
           
-          <v-card-actions v-if="isEditing" class="pa-6 pt-0">
-            <v-btn 
-              color="grey-darken-2" 
-              variant="elevated"
-              size="large"
-              class="flex-grow-1 mr-3"
-              @click="updateRecord"
-              prepend-icon="mdi-check"
-            >
-              Save Changes
-            </v-btn>
-            <v-btn 
-              color="grey-lighten-1" 
-              variant="outlined"
-              size="large"
-              class="flex-grow-1"
-              @click="cancelEdit"
-              prepend-icon="mdi-close"
-            >
-              Cancel
-            </v-btn>
+          <!-- Action Buttons -->
+          <v-card-actions class="pa-6 pt-0">
+            <template v-if="isEditing">
+              <v-btn 
+                color="primary" 
+                variant="elevated"
+                size="large"
+                class="flex-grow-1 mr-2"
+                @click="updateRecord"
+                prepend-icon="mdi-check"
+              >
+                Save Changes
+              </v-btn>
+              <v-btn 
+                color="grey-lighten-1" 
+                variant="outlined"
+                size="large"
+                @click="cancelEdit"
+                prepend-icon="mdi-close"
+              >
+                Cancel
+              </v-btn>
+            </template>
+            <template v-else>
+              <v-btn 
+                color="primary" 
+                variant="elevated"
+                size="large"
+                class="flex-grow-1"
+                @click="isEditing = true"
+                prepend-icon="mdi-pencil"
+              >
+                Regularize Record
+              </v-btn>
+            </template>
           </v-card-actions>
-        </v-card>
-
-        <!-- Empty State Card -->
-        <v-card v-else elevation="2" class="rounded-lg text-center pa-8">
-          <v-icon size="64" color="grey-lighten-3" class="mb-4">
-            mdi-clock-outline
-          </v-icon>
-          <h3 class="text-h6 font-weight-medium text-grey mb-2">No Record Selected</h3>
-          <p class="text-body-2 text-grey">Click on a record from the table to view its details</p>
         </v-card>
       </v-col>
     </v-row>
 
     <!-- Add Record Dialog -->
-    <v-dialog v-model="newRecordDialog" max-width="700px" persistent>
-      <v-card class="rounded-lg overflow-hidden">
-        <v-card-title class="pa-6" style="background-color: #ffffff; border-bottom: 1px solid #e0e0e0;">
-          <div class="d-flex align-center">
-            <v-icon large color="grey-darken-1" class="mr-3">mdi-clock-plus-outline</v-icon>
-            <span class="text-h5 font-weight-medium text-grey-darken-2">Add New Record</span>
+    <v-dialog v-model="newRecordDialog" max-width="600px" persistent>
+      <v-card class="elevation-8">
+        <v-card-title class="pa-6 bg-primary">
+          <div class="d-flex align-center text-white">
+            <v-icon color="white" class="mr-3">mdi-plus-circle-outline</v-icon>
+            <span class="text-h6 font-weight-medium">Add New Record</span>
           </div>
         </v-card-title>
         
         <v-card-text class="pa-6">
-          <v-form ref="newRecordForm" class="new-record-form">
+          <v-form ref="newRecordForm">
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col cols="12">
                 <v-select
                   v-model="newRecord.emp_id"
                   :items="employeeOptions"
@@ -383,41 +430,21 @@
                   label="Employee"
                   variant="outlined"
                   prepend-inner-icon="mdi-account"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
+                  required
                 />
               </v-col>
               <v-col cols="12" md="6">
                 <v-text-field 
                   v-model="newRecord.start_date" 
-                  label="Start Date" 
+                  label="Date" 
                   type="date"
                   variant="outlined"
                   prepend-inner-icon="mdi-calendar"
-                  density="comfortable"
-                  color="grey-darken-2"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field 
-                  v-model="newRecord.start_time" 
-                  label="Start Time" 
-                  type="datetime-local"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-clock-start"
-                  density="comfortable"
-                  color="grey-darken-2"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field 
-                  v-model="newRecord.end_time" 
-                  label="End Time" 
-                  type="datetime-local"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-clock-end"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
+                  required
                 />
               </v-col>
               <v-col cols="12" md="6">
@@ -429,11 +456,36 @@
                   label="Shift"
                   variant="outlined"
                   prepend-inner-icon="mdi-clock-outline"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
+                  required
                 />
               </v-col>
               <v-col cols="12" md="6">
+                <v-text-field 
+                  v-model="newRecord.start_time" 
+                  label="Start Time" 
+                  type="time"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-clock-start"
+                  density="compact"
+                  color="primary"
+                  required
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field 
+                  v-model="newRecord.end_time" 
+                  label="End Time" 
+                  type="time"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-clock-end"
+                  density="compact"
+                  color="primary"
+                  required
+                />
+              </v-col>
+              <v-col cols="12">
                 <v-text-field 
                   v-model="newRecord.duration" 
                   label="Duration (hours)" 
@@ -441,8 +493,9 @@
                   step="0.25"
                   variant="outlined"
                   prepend-inner-icon="mdi-timer-outline"
-                  density="comfortable"
-                  color="grey-darken-2"
+                  density="compact"
+                  color="primary"
+                  required
                 />
               </v-col>
             </v-row>
@@ -451,7 +504,7 @@
         
         <v-card-actions class="pa-6 pt-0">
           <v-btn 
-            color="grey-darken-2" 
+            color="primary" 
             variant="elevated"
             size="large"
             class="flex-grow-1 mr-3"
@@ -464,7 +517,6 @@
             color="grey-lighten-1" 
             variant="outlined"
             size="large"
-            class="flex-grow-1"
             @click="newRecordDialog = false"
             prepend-icon="mdi-close"
           >
@@ -488,16 +540,16 @@ const isEditing = ref(false)
 const search = ref("")
 const statusFilter = ref("")
 const dateFilter = ref("")
+const employeeFilter = ref("")
 
 const headers = [
-  { title: "ID", key: "id", width: "60px" },
-  { title: "Employee", key: "emp_id", width: "200px" },
-  { title: "Date", key: "start_date", width: "120px" },
-  { title: "Start", key: "start_time", width: "100px" },
-  { title: "End", key: "end_time", width: "100px" },
-  { title: "Duration", key: "duration", width: "100px" },
-  { title: "Status", key: "status", width: "120px" },
-  { title: "Actions", key: "actions", sortable: false, width: "120px" },
+  { title: "Employee", key: "emp_id", width: "250px", sortable: true },
+  { title: "Date", key: "start_date", width: "120px", sortable: true },
+  { title: "Start", key: "start_time", width: "100px", sortable: false },
+  { title: "End", key: "end_time", width: "100px", sortable: false },
+  { title: "Duration", key: "duration", width: "100px", sortable: true },
+  { title: "Status", key: "status", width: "120px", sortable: true },
+  { title: "Actions", key: "actions", sortable: false, width: "120px", align: "center" },
 ]
 
 const statusOptions = ["Pending", "Approved", "Rejected"]
@@ -523,25 +575,35 @@ const shiftOptions = computed(() =>
 const filteredRecords = computed(() => {
   let filtered = records.value
 
+  // Search filter (employee name or ID)
   if (search.value) {
     const searchLower = search.value.toLowerCase()
-    filtered = filtered.filter(record => 
-      record.emp_id.toLowerCase().includes(searchLower) ||
-      getEmployeeName(record.emp_id).toLowerCase().includes(searchLower)
-    )
+    filtered = filtered.filter(record => {
+      const employeeName = getEmployeeName(record.emp_id).toLowerCase()
+      const employeeId = record.emp_id.toString().toLowerCase()
+      return employeeName.includes(searchLower) || employeeId.includes(searchLower)
+    })
   }
 
+  // Status filter
   if (statusFilter.value) {
     filtered = filtered.filter(record => record.status === statusFilter.value)
   }
 
+  // Date filter
   if (dateFilter.value) {
     filtered = filtered.filter(record => record.start_date === dateFilter.value)
   }
 
-  return filtered
+  // Employee filter
+  if (employeeFilter.value) {
+    filtered = filtered.filter(record => record.emp_id === employeeFilter.value)
+  }
+
+  return filtered.sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
 })
 
+// API Functions
 const fetchRecords = async () => {
   try {
     const res = await axios.get("/api/records/")
@@ -660,6 +722,7 @@ const clearFilters = () => {
   search.value = ""
   statusFilter.value = ""
   dateFilter.value = ""
+  employeeFilter.value = ""
 }
 
 // Helper functions
@@ -668,16 +731,37 @@ const getEmployeeName = (empId) => {
   return employee ? employee.name : empId
 }
 
+const getEmployeeColor = (empId) => {
+  const colors = ['primary', 'secondary', 'success', 'info', 'warning', 'error']
+  const hash = empId.toString().split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0)
+    return a & a
+  }, 0)
+  return colors[Math.abs(hash) % colors.length]
+}
+
 const formatDate = (dateStr) => {
   if (!dateStr) return ""
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\/|\s/g, '-');
+  // Handle DD-MM-YYYY format
+  const [day, month, year] = dateStr.split('-')
+  const date = new Date(year, month - 1, day) // month is 0-indexed
+  return date.toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
+  })
 }
 
 const formatTime = (timeStr) => {
   if (!timeStr) return ""
-  return new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  // Handle full datetime format "YYYY-MM-DD HH:MM:SS"
+  const date = new Date(timeStr)
+  return date.toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  })
 }
-
 const formatDuration = (duration) => {
   if (!duration) return ""
   const hours = Math.floor(duration)
@@ -687,18 +771,14 @@ const formatDuration = (duration) => {
 
 const getStatusColor = (status) => {
   switch (status) {
-    case "Approved": return "grey-lighten-4"
-    case "Rejected": return "grey-lighten-3"
-    default: return "grey-lighten-2"
+    case "Approved": return "success"
+    case "Rejected": return "error"
+    default: return "warning"
   }
 }
 
 const getStatusTextClass = (status) => {
-  switch (status) {
-    case "Approved": return "text-grey-darken-1"
-    case "Rejected": return "text-grey-darken-2"
-    default: return "text-grey-darken-1"
-  }
+  return ""  // Let Vuetify handle the text color based on the chip color
 }
 
 const getStatusIcon = (status) => {
@@ -717,29 +797,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.records-table :deep(.v-data-table__tr:hover) {
-  background-color: rgba(0, 0, 0, 0.04) !important;
+.records-table :deep(.v-data-table__tr) {
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.record-details-form :deep(.v-field--disabled) {
-  opacity: 0.8;
+.records-table :deep(.v-data-table__tr:hover) {
+  background-color: rgba(25, 118, 210, 0.04) !important;
 }
 
-.new-record-form :deep(.v-field__outline) {
-  --v-field-border-opacity: 0.3;
+.search-field :deep(.v-field__outline) {
+  border-radius: 12px;
 }
 
-.new-record-form :deep(.v-field--focused .v-field__outline) {
-  --v-field-border-opacity: 1;
+.record-form :deep(.v-field--disabled .v-field__overlay) {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 :deep(.v-card) {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px !important;
 }
 
 :deep(.v-btn) {
   text-transform: none;
   letter-spacing: 0;
+  border-radius: 8px;
+}
+
+:deep(.v-chip) {
+  border-radius: 8px;
+}
+
+.max-w-md {
+  max-width: 28rem;
 }
 </style>

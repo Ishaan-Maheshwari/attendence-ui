@@ -58,21 +58,21 @@
         </template>
 
         <v-list class="elevation-8" min-width="180" rounded="lg">
-          <v-list-item
+          <!-- <v-list-item
             prepend-icon="mdi-account-circle"
             title="Profile"
             subtitle="Manage account"
             class="py-3"
-          ></v-list-item>
+          ></v-list-item> -->
           
-          <v-list-item
+          <!-- <v-list-item
             prepend-icon="mdi-cog"
             title="Settings"
             subtitle="App preferences"
             class="py-3"
-          ></v-list-item>
+          ></v-list-item> -->
           
-          <v-divider class="my-2"></v-divider>
+          <!-- <v-divider class="my-2"></v-divider> -->
           
           <v-list-item
             prepend-icon="mdi-logout"
