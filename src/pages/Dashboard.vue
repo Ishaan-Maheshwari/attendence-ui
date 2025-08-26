@@ -3,7 +3,7 @@
     <!-- Header Section -->
     <div class="mb-8">
       <h1 class="text-h4 font-weight-bold text-primary mb-2">Overview</h1>
-      <p class="text-subtitle-1 text-medium-emphasis">Monitor employee attendance and system status</p>
+      <p class="text-subtitle-1 text-medium-emphasis">Monitor employee attendance and system statius</p>
     </div>
 
     <!-- Stats Cards Row -->
@@ -48,7 +48,7 @@
           <v-card-text class="pa-6">
             <div class="d-flex align-center justify-space-between">
               <div>
-                <p class="text-caption text-medium-emphasis mb-1">Inconsistent Punches</p>
+                <p class="text-caption text-medium-emphasis mb-1">Inconsistencies this month</p>
                 <h2 class="text-h3 font-weight-bold text-warning">{{ exceptionsCount }}</h2>
               </div>
               <v-avatar size="56" color="warning" variant="tonal">
@@ -106,7 +106,29 @@
               item-value="id"
               class="elevation-0"
               :items-per-page="10"
+              :search="searchTodayAttendance"
+              :custom-filter="employeeFilter"
             >
+              <!-- 🔎 Search inside table header -->
+              <template v-slot:top>
+                <v-toolbar color="white" density="compact">
+                  <!-- <v-toolbar-title>Checked-in Employees</v-toolbar-title> -->
+                  <!-- <v-spacer></v-spacer> -->
+
+                  <v-text-field
+                    v-model="searchTodayAttendance"
+                    label="Search by Name or ID"
+                    prepend-inner-icon="mdi-magnify"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    class="mx-2"
+                    rounded
+                    style="max-width: 250px;"
+                  />
+                </v-toolbar>
+              </template>
               <template v-slot:item.emp_id="{ item }">
                 <div class="d-flex align-center">
                   <v-avatar size="32" color="primary" class="me-3">
@@ -157,19 +179,33 @@
                 <h3 class="text-h6 font-weight-bold">Exception Panel</h3>
                 <p class="text-caption text-medium-emphasis mt-1">Issues requiring attention</p>
               </div>
-              <v-btn 
-                icon="mdi-refresh" 
-                variant="text" 
-                size="small"
-                :loading="loading.exceptions"
-                @click="fetchExceptions"
-              ></v-btn>
+              <div class="d-flex align-center" style="gap: 12px;">
+                <!-- 📅 Date Picker -->
+                <v-text-field
+                  v-model="selectedDate"
+                  label="Filter by Date"
+                  type="date"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                  clearable
+                  rounded="lg"
+                  style="max-width: 180px;"
+                />
+                <v-btn 
+                  icon="mdi-refresh" 
+                  variant="text" 
+                  size="small"
+                  :loading="loading.exceptions"
+                  @click="fetchExceptions"
+                />
+              </div>
             </div>
           </v-card-title>
 
           <v-card-text class="pa-0">
             <v-list class="py-0" max-height="400" style="overflow-y: auto">
-              <template v-for="(exception, index) in exceptions" :key="exception.id">
+              <template v-for="(exception, index) in filteredExceptions" :key="exception.id">
 
                 <v-list-item class="px-6 py-4">
                   <template v-slot:prepend>
@@ -218,10 +254,10 @@
 
                 </v-list-item>
                 
-                <v-divider v-if="index < exceptions.length - 1"></v-divider>
+                <v-divider v-if="index < filteredExceptions.length - 1"></v-divider>
               </template>
 
-              <div v-if="exceptions.length === 0 && !loading.exceptions" class="text-center pa-8">
+              <div v-if="filteredExceptions.length === 0 && !loading.filteredExceptions" class="text-center pa-8">
                 <v-icon size="32" color="success" class="mb-2">mdi-check-circle</v-icon>
                 <p class="text-medium-emphasis">No exceptions found</p>
               </div>
@@ -292,6 +328,8 @@ const employees = ref([])
 const checkedInEmployees = ref([])
 const exceptions = ref([])
 const syncInfo = ref({})
+const searchTodayAttendance = ref("")
+const selectedDate = ref(""); // bound to date picker
 
 const loading = ref({
   employees: false,
@@ -318,7 +356,7 @@ const checkedInCount = computed(() => checkedInEmployees.value.length)
 const exceptionsCount = computed(() => exceptions.value.length)
 
 const syncStatus = computed(() => {
-  if (!syncInfo.value.last_sync) {
+  if (!syncInfo.value.last_sync_time) {
     return {
       text: 'No Data',
       color: 'text-medium-emphasis',
@@ -345,9 +383,34 @@ const syncStatus = computed(() => {
 })
 
 const lastSyncTime = computed(() => {
-  if (!syncInfo.value.last_sync) return 'Never'
-  return formatDateTime(syncInfo.value.last_sync)
+  if (!syncInfo.value.last_sync_time) return 'Never'
+  return formatDateTime(syncInfo.value.last_sync_time)
 })
+
+
+// search functions
+function employeeFilter(value, search, item) {
+  if (!search) return true;
+
+  const employeeName = getEmployeeName(item.raw.emp_id)?.toLowerCase() || "";
+  const employeeId = String(item.raw.emp_id).toLowerCase();
+
+  return (
+    employeeName.includes(search.toLowerCase()) ||
+    employeeId.includes(search.toLowerCase())
+  );
+}
+
+const filteredExceptions = computed(() => {
+  if (!selectedDate.value) return exceptions.value;
+
+  return exceptions.value.filter(e => {
+    // Parse dd-MM-yyyy string properly
+    const [day, month, year] = e.start_date.split("-");
+    const formattedExDate = `${year}-${month}-${day}`; // yyyy-MM-dd
+    return formattedExDate === selectedDate.value;
+  });
+});
 
 // API functions
 const fetchEmployees = async () => {
@@ -520,7 +583,7 @@ const formatDateTime = (dateTimeString) => {
   const [hour, minute, second] = time.split(':')
   const dateObj = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`)
   return dateObj.toLocaleString('en-US', {
-    month: 'numeric',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'

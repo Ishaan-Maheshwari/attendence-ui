@@ -51,7 +51,8 @@
               hide-details
               class="search-field"
               color="primary"
-              rounded="lg"
+              rounded
+              clearable
             />
           </div>
 
