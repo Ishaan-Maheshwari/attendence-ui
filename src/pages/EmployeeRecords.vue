@@ -1,15 +1,57 @@
 <template>
   <v-container fluid class="px-6 py-8" style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); min-height: 100vh;">
-    <!-- Header Section -->
-    <!-- <div class="text-center mb-12">
-      <div class="d-flex align-center justify-center mb-3">
-        <v-icon size="40" color="primary" class="mr-3">mdi-clock-time-four-outline</v-icon>
-        <h1 class="text-h3 font-weight-light text-grey-darken-3">Time Records</h1>
-      </div>
-      <p class="text-body-1 text-grey-darken-1  mx-auto">
-        Track, manage and regularize employee time records with ease
-      </p>
-    </div> -->
+    
+    <!-- Employee Summary Section -->
+    <v-card class="mb-6 elevation-0" style="border: 1px solid #e0e0e0;">
+      <v-card-text class="pa-6">
+        <v-row align="center">
+          <v-col cols="12" md="4">
+            <div class="d-flex align-center">
+              <v-avatar size="64" :color="getEmployeeColor(employee.id)" class="mr-4">
+                <span class="text-white font-weight-bold text-h5">
+                  {{ employee.name?.charAt(0).toUpperCase() }}
+                </span>
+              </v-avatar>
+              <div>
+                <h2 class="text-h5 font-weight-medium mb-1">{{ employee.name }}</h2>
+                <p class="text-body-2 text-grey-darken-1 mb-0">Employee ID: {{ employee.id }}</p>
+                <p class="text-caption text-grey-darken-1">{{ employee.department || 'Department' }}</p>
+              </div>
+            </div>
+          </v-col>
+          <v-col cols="12" md="8">
+            <v-row>
+              
+              <v-col cols="6" md="3">
+                <v-card class="text-center py-3"  variant="text">
+                  <div class="text-h5 font-weight-bold text-error">{{ monthlyStats.currentMonth }}</div>
+                  <div class="text-caption text-error-darken-1">Current Month Stats</div>
+                </v-card>
+              </v-col>
+              <v-divider vertical></v-divider>
+              <v-col cols="6" md="3">
+                <v-card class="text-center pa-3" color="success-lighten-5" variant="tonal">
+                  <div class="text-h6 font-weight-bold text-success">{{ monthlyStats.presentDays }}</div>
+                  <div class="text-caption text-success-darken-1">Present Days</div>
+                </v-card>
+              </v-col>
+              <v-col cols="6" md="3">
+                <v-card class="text-center pa-3" color="info-lighten-5" variant="tonal">
+                  <div class="text-h6 font-weight-bold text-info">{{ monthlyStats.totalHours }}</div>
+                  <div class="text-caption text-info-darken-1">Total Hours</div>
+                </v-card>
+              </v-col>
+              <v-col cols="6" md="3">
+                <v-card class="text-center pa-3" color="warning-lighten-5" variant="tonal">
+                  <div class="text-h6 font-weight-bold text-warning">{{ monthlyStats.missedCheckouts }}</div>
+                  <div class="text-caption text-warning-darken-1">Missed Checkouts</div>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
     <!-- Filters Section -->
     <v-card class="mb-6 elevation-0" style="border: 1px solid #e0e0e0;">
@@ -17,34 +59,8 @@
         <v-row align="center">
           <v-col cols="12" md="3">
             <v-text-field
-              v-model="search"
-              label="Search by employee..."
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              density="compact"
-              hide-details
-              clearable
-              color="primary"
-              class="search-field"
-            />
-          </v-col>
-          <!-- <v-col cols="12" md="2">
-            <v-select
-              v-model="statusFilter"
-              :items="statusOptions"
-              label="Status"
-              variant="outlined"
-              density="compact"
-              hide-details
-              clearable
-              color="primary"
-              prepend-inner-icon="mdi-check-circle-outline"
-            />
-          </v-col> -->
-          <v-col cols="12" md="2">
-            <v-text-field
               v-model="dateFilter"
-              label="Date"
+              label="Filter by date"
               type="date"
               variant="outlined"
               density="compact"
@@ -56,43 +72,51 @@
           </v-col>
           <v-col cols="12" md="3">
             <v-select
-              v-model="employeeFilter"
-              :items="employeeOptions"
-              item-title="name"
-              item-value="id"
-              label="Filter by employee"
+              v-model="statusFilter"
+              :items="statusOptions"
+              label="Filter by status"
               variant="outlined"
               density="compact"
               hide-details
               clearable
               color="primary"
-              prepend-inner-icon="mdi-account"
+              prepend-inner-icon="mdi-check-circle-outline"
             />
           </v-col>
           <v-col cols="12" md="2">
-            <!-- <div class="d-flex gap-2"> -->
-              <v-btn
-                color="grey-lighten-1"
-                variant="outlined"
-                @click="clearFilters"
-                size="small"
-                class="flex-grow-1"
-              >
-                <v-icon size="16" class="mr-1">mdi-filter-off</v-icon>
-                Clear
-              </v-btn>
-            </v-col>
-            <v-col cols="12" md="2">
-              <v-btn
-                color="primary"
-                variant="tonal"
-                @click="openNewRecordDialog"
-                
-              >
-                <v-icon size="18">mdi-plus</v-icon>
-                Add New Record
-              </v-btn>
-            <!-- </div> -->
+            <v-select
+              v-model="monthFilter"
+              :items="monthOptions"
+              label="Month"
+              variant="outlined"
+              density="compact"
+              hide-details
+              clearable
+              color="primary"
+              prepend-inner-icon="mdi-calendar-month"
+            />
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-btn
+              color="grey-lighten-1"
+              variant="outlined"
+              @click="clearFilters"
+              size="small"
+              class="flex-grow-1"
+            >
+              <v-icon size="16" class="mr-1">mdi-filter-off</v-icon>
+              Clear Filters
+            </v-btn>
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-btn
+              color="primary"
+              variant="tonal"
+              @click="openNewRecordDialog"
+            >
+              <v-icon size="18">mdi-plus</v-icon>
+              Add Record
+            </v-btn>
           </v-col>
         </v-row>
       </v-card-text>
@@ -102,21 +126,54 @@
       <!-- Records Table -->
       <v-col cols="12" :md="selectedRecord ? 8 : 12">
         <v-card class="elevation-0" style="border: 1px solid #e0e0e0;">
-          <v-card-title class="pa-6 bg-white">
-            <div class="d-flex align-center justify-between w-100">
+          <v-card-title class="pa-6 bg-white align-center">
+            <div class="d-flex align-center justify-between w-100 ga-4">
               <div class="d-flex align-center">
                 <v-icon color="primary" class="mr-3">mdi-table-large</v-icon>
-                <span class="text-h6 font-weight-medium">Records</span>
+                <span class="text-h6 font-weight-medium">Attendance Records</span>
                 <v-chip size="small" color="grey-lighten-2" class="ml-3">
-                  {{ filteredRecords.length }} total
+                  {{ filteredRecords.length }} records
                 </v-chip>
+              </div>
+              <div class="d-flex ga-2">
+                <v-btn
+                  :color="viewMode === 'table' ? 'primary' : 'grey'"
+                  :variant="viewMode === 'table' ? 'tonal' : 'text'"
+                  size="small"
+                  @click="viewMode = 'table'"
+                >
+                  <v-tooltip activator="parent" location="top">Table View</v-tooltip>
+                  <v-icon size="24">mdi-table</v-icon>
+                </v-btn>
+                <v-btn
+                  :color="viewMode === 'calendar' ? 'primary' : 'grey'"
+                  :variant="viewMode === 'calendar' ? 'tonal' : 'text'"
+                  size="small"
+                  @click="viewMode = 'calendar'"
+                >
+                  <v-tooltip activator="parent" location="top">Calendar View</v-tooltip>
+                  <v-icon size="24">mdi-calendar</v-icon>
+                </v-btn>
+                <div class="mx-2"></div>
+                <v-btn
+                  color="primary"
+                  variant="text"
+                  size="small"
+                  @click="exportRecords"
+                  prepend-icon="mdi-download"
+                >
+                  Download Records
+                </v-btn>
+                
               </div>
             </div>
           </v-card-title>
           
           <v-divider></v-divider>
           
+          <!-- Table View -->
           <v-data-table
+            v-if="viewMode === 'table'"
             :headers="headers"
             :items="filteredRecords"
             item-key="id"
@@ -126,20 +183,6 @@
             :items-per-page="15"
             no-data-text="No records found"
           >
-            <template v-slot:item.emp_id="{ item }">
-              <div class="d-flex align-center rounded my-1 py-2 px-2 bg-teal-lighten-5 emp-name-textbox" @click="gotoEmployeeRecords(item.emp_id)">
-                <v-avatar size="36" class="mr-3" :color="getEmployeeColor(item.emp_id)">
-                  <span class="text-white font-weight-medium text-sm">
-                    {{ getEmployeeName(item.emp_id).charAt(0).toUpperCase() }}
-                  </span>
-                </v-avatar>
-                <div>
-                  <div class="font-weight-medium text-body-2">{{ getEmployeeName(item.emp_id) }}</div>
-                  <div class="text-caption text-grey-darken-1">{{ item.emp_id }}</div>
-                </div>
-              </div>
-            </template>
-            
             <template v-slot:item.start_date="{ item }">
               <div class="font-weight-medium text-body-2">
                 {{ formatDate(item.start_date) }}
@@ -217,10 +260,40 @@
                   <v-icon size="18">mdi-delete-outline</v-icon>
                   <v-tooltip activator="parent" location="top">Delete</v-tooltip>
                 </v-btn>
-                
               </div>
             </template>
           </v-data-table>
+
+          <!-- Calendar View -->
+          <div v-else class="pa-6">
+            <v-row>
+              <v-col v-for="day in calendarDays" :key="day.date" cols="12" sm="6" md="3" lg="2">
+                <v-card 
+                  :color="getCalendarDayColor(day.record)"
+                  :variant="day.record ? 'tonal' : 'outlined'"
+                  class="pa-3 calendar-day"
+                  @click="day.record && selectRecord(null, { item: day.record })"
+                >
+                  <div class="text-caption text-grey-darken-1">{{ formatCalendarDate(day.date) }}</div>
+                  <div v-if="day.record" class="mt-2">
+                    <div class="text-body-2 font-weight-medium">
+                      {{ formatTime(day.record.start_time) }} - {{ formatTime(day.record.end_time) }}
+                    </div>
+                    <div class="text-caption">
+                      {{ formatDuration(day.record.duration) }}
+                    </div>
+                    <v-chip size="x-small" :color="getStatusColor(day.record.status)" class="mt-1">
+                      {{ day.record.status }}
+                    </v-chip>
+                  </div>
+                  <div v-else class="text-center text-grey-lighten-1 mt-2">
+                    <v-icon size="20">mdi-calendar-blank</v-icon>
+                    <div class="text-caption">No record</div>
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+          </div>
         </v-card>
       </v-col>
 
@@ -253,17 +326,8 @@
           <v-card-text class="pa-6">
             <!-- Record Header -->
             <div class="text-center mb-6">
-              <div class="d-flex align-center justify-center mb-3">
-                <v-avatar size="48" :color="getEmployeeColor(selectedRecord.emp_id)" class="mr-3">
-                  <span class="text-white font-weight-bold">
-                    {{ getEmployeeName(selectedRecord.emp_id).charAt(0).toUpperCase() }}
-                  </span>
-                </v-avatar>
-                <div class="text-left">
-                  <h3 class="text-h6 font-weight-medium">{{ getEmployeeName(selectedRecord.emp_id) }}</h3>
-                  <p class="text-caption text-grey-darken-1 mb-0">Record #{{ selectedRecord.id }}</p>
-                </div>
-              </div>
+              <div class="text-h6 font-weight-medium mb-1">{{ employee.name }}</div>
+              <p class="text-caption text-grey-darken-1 mb-3">Record #{{ selectedRecord.id }}</p>
               <v-chip 
                 :color="getStatusColor(selectedRecord.status)"
                 :class="'font-weight-medium ' + getStatusTextClass(selectedRecord.status)"
@@ -276,21 +340,6 @@
 
             <!-- Record Form -->
             <v-form ref="recordForm" class="record-form">
-              <!-- Employee (Always Disabled) -->
-              <v-select
-                v-model="selectedRecord.emp_id"
-                :items="employeeOptions"
-                item-title="name"
-                item-value="id"
-                label="Employee"
-                disabled
-                variant="outlined"
-                prepend-inner-icon="mdi-account"
-                density="compact"
-                class="mb-4"
-                color="grey"
-              />
-              
               <!-- Date -->
               <v-text-field
                 v-model="selectedRecord.start_date"
@@ -424,27 +473,13 @@
         <v-card-title class="pa-6 bg-primary">
           <div class="d-flex align-center text-white">
             <v-icon color="white" class="mr-3">mdi-plus-circle-outline</v-icon>
-            <span class="text-h6 font-weight-medium">Add New Record</span>
+            <span class="text-h6 font-weight-medium">Add New Record for {{ employee.name }}</span>
           </div>
         </v-card-title>
         
         <v-card-text class="pa-6">
           <v-form ref="newRecordForm">
             <v-row>
-              <v-col cols="12">
-                <v-select
-                  v-model="newRecord.emp_id"
-                  :items="employeeOptions"
-                  item-title="name"
-                  item-value="id"
-                  label="Employee"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-account"
-                  density="compact"
-                  color="primary"
-                  required
-                />
-              </v-col>
               <v-col cols="12" md="6">
                 <v-text-field 
                   v-model="newRecord.start_date" 
@@ -541,35 +576,53 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import axios from "axios"
-import { useRouter } from "vue-router"
 
-const router = useRouter()
+// Props to receive employee ID from parent component or route
+const props = defineProps({
+  employeeId: {
+    type: [String, Number],
+    required: true
+  }
+})
 
 const records = ref([])
-const employees = ref([])
+const employee = ref({ id: props.employeeId, name: '', department: '' })
 const shifts = ref([])
 const selectedRecord = ref(null)
 const isEditing = ref(false)
-const search = ref("")
 const statusFilter = ref("")
 const dateFilter = ref("")
-const employeeFilter = ref("")
+const monthFilter = ref("")
+const viewMode = ref("table") // 'table' or 'calendar'
 
 const headers = [
-  { title: "Employee", key: "emp_id", width: "250px", sortable: true },
   { title: "Date", key: "start_date", width: "120px", sortable: true },
-  { title: "Start", key: "start_time", width: "100px", sortable: false },
-  { title: "End", key: "end_time", width: "100px", sortable: false },
+  { title: "Start", key: "start_time", width: "120px", sortable: false },
+  { title: "End", key: "end_time", width: "120px", sortable: false },
   { title: "Duration", key: "duration", width: "100px", sortable: true },
   { title: "Status", key: "status", width: "120px", sortable: true },
-  { title: "Actions", key: "actions", sortable: false, width: "120px", align: "center" },
+  { title: "Actions", key: "actions", sortable: false, width: "150px", align: "center" },
 ]
 
-const statusOptions = ["Pending", "Approved", "Rejected"]
+const statusOptions = ["IN", "OUT", "MISSED_CHECKOUT", "REGULARIZED", "ABSENT"]
+
+const monthOptions = [
+  { title: "January", value: "01" },
+  { title: "February", value: "02" },
+  { title: "March", value: "03" },
+  { title: "April", value: "04" },
+  { title: "May", value: "05" },
+  { title: "June", value: "06" },
+  { title: "July", value: "07" },
+  { title: "August", value: "08" },
+  { title: "September", value: "09" },
+  { title: "October", value: "10" },
+  { title: "November", value: "11" },
+  { title: "December", value: "12" },
+]
 
 const newRecordDialog = ref(false)
 const newRecord = ref({
-  emp_id: "",
   start_date: "",
   start_time: "",
   end_time: "",
@@ -577,26 +630,12 @@ const newRecord = ref({
   duration: "",
 })
 
-const employeeOptions = computed(() => 
-  employees.value.map(emp => ({ id: emp.id, name: emp.name }))
-)
-
 const shiftOptions = computed(() => 
   shifts.value.map(shift => ({ id: shift.id, name: shift.name }))
 )
 
 const filteredRecords = computed(() => {
   let filtered = records.value
-
-  // Search filter (employee name or ID)
-  if (search.value) {
-    const searchLower = search.value.toLowerCase()
-    filtered = filtered.filter(record => {
-      const employeeName = getEmployeeName(record.emp_id).toLowerCase()
-      const employeeId = record.emp_id.toString().toLowerCase()
-      return employeeName.includes(searchLower) || employeeId.includes(searchLower)
-    })
-  }
 
   // Status filter
   if (statusFilter.value) {
@@ -608,30 +647,75 @@ const filteredRecords = computed(() => {
     filtered = filtered.filter(record => record.start_date === dateFilter.value)
   }
 
-  // Employee filter
-  if (employeeFilter.value) {
-    filtered = filtered.filter(record => record.emp_id === employeeFilter.value)
+  // Month filter
+  if (monthFilter.value) {
+    filtered = filtered.filter(record => {
+      const recordMonth = record.start_date.split('-')[1]
+      return recordMonth === monthFilter.value
+    })
   }
 
   return filtered.sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
 })
 
+// Monthly statistics
+const monthlyStats = computed(() => {
+  const currentMonth = new Date().getMonth() + 1
+  const currentYear = new Date().getFullYear()
+  
+  const currentMonthRecords = records.value.filter(record => {
+    const [day, month, year] = record.start_date.split('-')
+    const recordDate = new Date(year, month - 1, day)
+    return recordDate.getMonth() + 1 === currentMonth && recordDate.getFullYear() === currentYear
+  })
+
+  return {
+    presentDays: currentMonthRecords.length,
+    currentMonth: new Date(currentYear, currentMonth - 1).toLocaleString('default', { month: 'long' }),
+    totalHours: currentMonthRecords.reduce((sum, r) => sum + (parseFloat(r.duration) || 0), 0).toFixed(1),
+    missedCheckouts: currentMonthRecords.filter(r => r.status === 'MISSED_CHECKOUT').length
+  }
+})
+
+// Calendar view data
+const calendarDays = computed(() => {
+  const currentMonth = new Date().getMonth()
+  const currentYear = new Date().getFullYear()
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  
+  const days = []
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(currentYear, currentMonth, day)
+    const dateStr = date.toISOString().split('T')[0]
+    const revDateStr = dateStr.split('-').reverse().join('-')
+    const record = records.value.find(r => r.start_date === revDateStr)
+    
+    days.push({
+      date: dateStr,
+      record: record
+    })
+  }
+  console.log(days[0])
+  console.log(days[18].record)
+  return days
+})
+
 // API Functions
 const fetchRecords = async () => {
   try {
-    const res = await axios.get("/api/records/")
+    const res = await axios.get(`/api/records/employee/${props.employeeId}`)
     records.value = res.data
   } catch (error) {
     console.error("Error fetching records:", error)
   }
 }
 
-const fetchEmployees = async () => {
+const fetchEmployee = async () => {
   try {
-    const res = await axios.get("/api/employees/")
-    employees.value = res.data
+    const res = await axios.get(`/api/employees/${props.employeeId}`)
+    employee.value = res.data
   } catch (error) {
-    console.error("Error fetching employees:", error)
+    console.error("Error fetching employee:", error)
   }
 }
 
@@ -680,10 +764,10 @@ const deleteRecord = async (id) => {
 
 const approveRecord = async (id) => {
   try {
-    await axios.patch(`/api/records/${id}`, { status: "Approved" })
+    await axios.patch(`/api/records/${id}`, { status: "OUT" })
     await fetchRecords()
     if (selectedRecord.value?.id === id) {
-      selectedRecord.value.status = "Approved"
+      selectedRecord.value.status = "OUT"
     }
   } catch (error) {
     console.error("Error approving record:", error)
@@ -692,19 +776,28 @@ const approveRecord = async (id) => {
 
 const rejectRecord = async (id) => {
   try {
-    await axios.patch(`/api/records/${id}`, { status: "Rejected" })
+    await axios.patch(`/api/records/${id}`, { status: "MISSED_CHECKOUT" })
     await fetchRecords()
     if (selectedRecord.value?.id === id) {
-      selectedRecord.value.status = "Rejected"
+      selectedRecord.value.status = "MISSED_CHECKOUT"
     }
   } catch (error) {
     console.error("Error rejecting record:", error)
   }
 }
 
+const regularizeRecord = (id) => {
+  const record = records.value.find(r => r.id === id)
+  if (record) {
+    selectRecord(null, { item: record })
+    setTimeout(() => {
+      isEditing.value = true
+    }, 100)
+  }
+}
+
 const openNewRecordDialog = () => {
   newRecord.value = {
-    emp_id: "",
     start_date: "",
     start_time: "",
     end_time: "",
@@ -716,7 +809,12 @@ const openNewRecordDialog = () => {
 
 const createRecord = async () => {
   try {
-    await axios.post("/api/records/new", newRecord.value)
+    // Add employee ID to the record before sending
+    const recordData = {
+      ...newRecord.value,
+      emp_id: props.employeeId
+    }
+    await axios.post("/api/records/new", recordData)
     newRecordDialog.value = false
     await fetchRecords()
   } catch (error) {
@@ -732,18 +830,40 @@ const cancelEdit = async () => {
 }
 
 const clearFilters = () => {
-  search.value = ""
   statusFilter.value = ""
   dateFilter.value = ""
-  employeeFilter.value = ""
+  monthFilter.value = ""
+}
+
+const exportRecords = () => {
+  // Convert records to CSV format
+  const headers = ['Employee ID', 'Employee Name', 'Date', 'Start Time', 'End Time', 'Duration', 'Status']
+  const csvContent = [
+    headers.join(','),
+    ...filteredRecords.value.map(record => [
+      employee.value.id,
+      employee.value.name,
+      formatDate(record.start_date),
+      formatTime(record.start_time),
+      formatTime(record.end_time),
+      formatDuration(record.duration),
+      record.status
+    ].join(','))
+  ].join('\n')
+  
+  // Create and download file
+  const blob = new Blob([csvContent], { type: 'text/csv' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${employee.value.name}_attendance_records.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  window.URL.revokeObjectURL(url)
 }
 
 // Helper functions
-const getEmployeeName = (empId) => {
-  const employee = employees.value.find(emp => emp.id === empId)
-  return employee ? employee.name : empId
-}
-
 const getEmployeeColor = (empId) => {
   const colors = ['primary', 'secondary', 'success', 'info', 'warning', 'error']
   const hash = empId.toString().split('').reduce((a, b) => {
@@ -755,9 +875,16 @@ const getEmployeeColor = (empId) => {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ""
-  // Handle DD-MM-YYYY format
-  const [day, month, year] = dateStr.split('-')
-  const date = new Date(year, month - 1, day) // month is 0-indexed
+  // Handle both DD-MM-YYYY and YYYY-MM-DD formats
+  let date
+  if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+    // YYYY-MM-DD format
+    date = new Date(dateStr)
+  } else {
+    // DD-MM-YYYY format
+    const [day, month, year] = dateStr.split('-')
+    date = new Date(year, month - 1, day)
+  }
   return date.toLocaleDateString('en-GB', { 
     day: '2-digit', 
     month: 'short', 
@@ -765,28 +892,54 @@ const formatDate = (dateStr) => {
   })
 }
 
+const formatCalendarDate = (dateStr) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short'
+  })
+}
+
 const formatTime = (timeStr) => {
   if (!timeStr) return "--:--"
-  // Handle full datetime format "YYYY-MM-DD HH:MM:SS"
-  const date = new Date(timeStr)
+  // Handle full datetime format "YYYY-MM-DD HH:MM:SS" or just "HH:MM:SS"
+  let timeToFormat = timeStr
+  if (timeStr.includes(' ')) {
+    timeToFormat = timeStr.split(' ')[1]
+  }
+  
+  const [hours, minutes] = timeToFormat.split(':')
+  const date = new Date()
+  date.setHours(parseInt(hours), parseInt(minutes), 0)
+  
   return date.toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit',
     hour12: true 
   })
 }
+
 const formatDuration = (duration) => {
-  if (!duration) return ""
+  if (!duration) return "-- --"
   const hours = Math.floor(duration)
   const minutes = Math.round((duration - hours) * 60)
   return `${hours}h ${minutes}m`
 }
 
 const getStatusColor = (status) => {
-  if (!status) return "error"
-  if (status === "OUT") return "success"
-  if (status === "UNUSUAL_CHECKIN") return "danger"
-  return "warning"
+  switch (status) {
+    case "OUT":
+    case "REGULARIZED":
+      return "success"
+    case "IN":
+      return "info"
+    case "MISSED_CHECKOUT":
+      return "warning"
+    case "ABSENT":
+      return "error"
+    default:
+      return "grey"
+  }
 }
 
 const getStatusTextClass = (status) => {
@@ -794,19 +947,41 @@ const getStatusTextClass = (status) => {
 }
 
 const getStatusIcon = (status) => {
-  if (!status) return "mdi-close-outline"
-  if (status === "OUT") return "mdi-check-circle"
-  if (status === "UNUSUAL_CHECKIN") return "mdi-alert-circle"
-  return "mdi-clock-outline"
+  switch (status) {
+    case "OUT":
+      return "mdi-check-circle"
+    case "IN":
+      return "mdi-login"
+    case "MISSED_CHECKOUT":
+      return "mdi-alert-circle"
+    case "REGULARIZED":
+      return "mdi-hammer-wrench"
+    case "ABSENT":
+      return "mdi-close-circle"
+    default:
+      return "mdi-help-circle"
+  }
 }
 
-const gotoEmployeeRecords = (empId) => {
-  router.push({ name: 'EmployeeRecords', params: { employeeId: empId } })
+const getCalendarDayColor = (record) => {
+  if (!record) return "grey-lighten-4"
+  
+  switch (record.status) {
+    case "OUT":
+    case "REGULARIZED":
+      return "success-lighten-4"
+    case "MISSED_CHECKOUT":
+      return "warning-lighten-4"
+    case "ABSENT":
+      return "error-lighten-4"
+    default:
+      return "info-lighten-4"
+  }
 }
 
 onMounted(() => {
   fetchRecords()
-  fetchEmployees()
+  fetchEmployee()
   fetchShifts()
 })
 </script>
@@ -821,12 +996,19 @@ onMounted(() => {
   background-color: rgba(25, 118, 210, 0.04) !important;
 }
 
-.search-field :deep(.v-field__outline) {
-  border-radius: 12px;
-}
-
 .record-form :deep(.v-field--disabled .v-field__overlay) {
   background-color: rgba(0, 0, 0, 0.02);
+}
+
+.calendar-day {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 120px;
+}
+
+.calendar-day:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 :deep(.v-card) {
@@ -843,12 +1025,7 @@ onMounted(() => {
   border-radius: 8px;
 }
 
-.max-w-md {
-  max-width: 28rem;
-}
-
-.emp-name-textbox:hover {
-  cursor: pointer;
-  background-color: #B2DFDB !important;
+:deep(.v-chip__content) {
+  font-weight: 500;
 }
 </style>

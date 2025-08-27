@@ -205,7 +205,7 @@
                 </span>
               </v-avatar>
               <h3 class="text-h4 font-weight-bold text-grey-darken-3 mb-1">{{ selectedEmployee.name }}</h3>
-              <v-chip color="primary" variant="tonal" size="large" class="font-weight-medium">
+              <v-chip color="primary" variant="outlined" size="large" class="font-weight-medium">
                 ID: {{ selectedEmployee.id }}
               </v-chip>
             </div>
@@ -623,7 +623,7 @@ const createEmployee = async () => {
 }
 
 const viewAttendanceRecords = (empId) => {
-  router.push(`/records/emp/${empId}`)
+  router.push({ name: 'EmployeeRecords', params: { employeeId: empId } })
 }
 
 const callEmployee = () => {
