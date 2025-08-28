@@ -9,6 +9,7 @@ import Records from '@/pages/Records.vue'
 import Users from '@/pages/Users.vue'
 import Login from '@/pages/Login.vue'
 import EmployeeRecords from '@/pages/EmployeeRecords.vue'
+import RegulariseRecord from '@/pages/RegulariseRecord.vue'
 
 import { useAuthStore } from '@/stores/auth'
 
@@ -30,6 +31,7 @@ const routes = [
       { name: 'ManageRecordsHome', path: 'records', component: Records },
       { name: 'ManageUsersHome', path: 'users', component: Users },
       { name: 'EmployeeRecords', path: 'records/emp/:employeeId', component: EmployeeRecords, props: true },
+      { name: 'RegulariseRecord', path: '/regularise/:recordId', component: RegulariseRecord, props: true }
     ],
   },
 ]

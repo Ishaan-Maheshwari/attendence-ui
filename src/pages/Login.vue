@@ -181,6 +181,7 @@ async function handleLogin() {
     if (!res.ok) throw new Error(data.msg || 'Login failed')
 
     auth.setToken(data.access_token)
+    auth.setUser(data.user)
     
     // Show success message
     showSuccess.value = true

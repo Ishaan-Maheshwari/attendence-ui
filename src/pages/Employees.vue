@@ -590,7 +590,7 @@ const updateEmployee = async () => {
 const deleteEmployee = async (id) => {
   if (confirm("Are you sure you want to delete this employee? This action cannot be undone.")) {
     try {
-      await axios.delete(`/api/employee/${id}`)
+      await axios.delete(`/api/employees/${id}`)
       await fetchEmployees()
       if (selectedEmployee.value?.id === id) {
         selectedEmployee.value = null
@@ -605,7 +605,7 @@ const deleteEmployee = async (id) => {
 
 const createEmployee = async () => {
   const form = ref(null)
-  if (!(await form.value?.validate())?.valid) return
+  // if (!(await form.value?.validate())?.valid) return
 
   creating.value = true
   try {

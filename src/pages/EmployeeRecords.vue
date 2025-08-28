@@ -265,7 +265,7 @@
           </v-data-table>
 
           <!-- Calendar View -->
-          <div v-else class="pa-6">
+          <!-- <div v-else class="pa-6">
             <v-row>
               <v-col v-for="day in calendarDays" :key="day.date" cols="12" sm="6" md="3" lg="2">
                 <v-card 
@@ -293,7 +293,49 @@
                 </v-card>
               </v-col>
             </v-row>
-          </div>
+          </div> -->
+          <v-container v-else fluid>
+            <v-row class="text-center font-weight-bold custom-7-cols">
+              <v-col v-for="(day, index) in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="index" class="bg-grey-lighten-4">
+                {{ day }}
+              </v-col>
+            </v-row>
+
+            <v-row class="custom-7-cols">
+              <v-col
+                v-for="(day, index) in calendarDays"
+                :key="index"
+                cols="2"
+                class="calendar-cell"
+              >
+                <v-card
+                  :color="day.record ? getCalendarDayColor(day.record) : ''"
+                  :variant="day.record ? 'tonal' : 'outlined'"
+                  class="pa-3 calendar-day"
+                  @click="day.record && selectRecord(null, { item: day.record })"
+                >
+                  <div class="text-caption text-grey-darken-1">
+                    {{ day.date ? formatCalendarDate(day.date) : '' }}
+                  </div>
+                  <div v-if="day.record" class="mt-2">
+                    <div class="text-body-2 font-weight-medium">
+                      {{ formatTime(day.record.start_time) }} - {{ formatTime(day.record.end_time) }}
+                    </div>
+                    <div class="text-caption">
+                      {{ formatDuration(day.record.duration) }}
+                    </div>
+                    <v-chip size="x-small" :color="getStatusColor(day.record.status)" class="mt-1">
+                      {{ day.record.status }}
+                    </v-chip>
+                  </div>
+                  <div v-else-if="day.date" class="text-center text-grey-lighten-1 mt-2">
+                    <v-icon size="20">mdi-calendar-blank</v-icon>
+                    <div class="text-caption">No record</div>
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-container>
         </v-card>
       </v-col>
 
@@ -576,6 +618,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue"
 import axios from "axios"
+import router from "@/router"
 
 // Props to receive employee ID from parent component or route
 const props = defineProps({
@@ -679,13 +722,21 @@ const monthlyStats = computed(() => {
 
 // Calendar view data
 const calendarDays = computed(() => {
-  const currentMonth = new Date().getMonth()
+  const currentMonth = new Date().getMonth();
+  console.log("Current month", currentMonth)
   const currentYear = new Date().getFullYear()
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
-  
+  const startOfMonth = new Date(currentYear, currentMonth, 1);
+  const startWeekday = startOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
   const days = []
+
+  // Add empty days before 1st of month
+  for (let i = 0; i < startWeekday; i++) {
+    days.push({ date: null, record: null });
+  }
+  
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(currentYear, currentMonth, day)
+    const date = new Date(currentYear, currentMonth, day+1)
     const dateStr = date.toISOString().split('T')[0]
     const revDateStr = dateStr.split('-').reverse().join('-')
     const record = records.value.find(r => r.start_date === revDateStr)
@@ -695,8 +746,7 @@ const calendarDays = computed(() => {
       record: record
     })
   }
-  console.log(days[0])
-  console.log(days[18].record)
+  console.log(days[startWeekday])
   return days
 })
 
@@ -787,13 +837,14 @@ const rejectRecord = async (id) => {
 }
 
 const regularizeRecord = (id) => {
-  const record = records.value.find(r => r.id === id)
-  if (record) {
-    selectRecord(null, { item: record })
-    setTimeout(() => {
-      isEditing.value = true
-    }, 100)
-  }
+  router.push(`/regularise/${id}`)
+  // const record = records.value.find(r => r.id === id)
+  // if (record) {
+  //   selectRecord(null, { item: record })
+  //   setTimeout(() => {
+  //     isEditing.value = true
+  //   }, 100)
+  // }
 }
 
 const openNewRecordDialog = () => {
@@ -1027,5 +1078,10 @@ onMounted(() => {
 
 :deep(.v-chip__content) {
   font-weight: 500;
+}
+
+.custom-7-cols .v-col {
+  flex-basis: calc(100% / 7);
+  max-width: calc(100% / 7);
 }
 </style>

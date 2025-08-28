@@ -17,6 +17,7 @@
 import AppBar from '@/components/AppBar.vue'
 import AppFooter from '@/components/AppFooter.vue'
 
+
 export default {
   name: 'MainLayout',
   components: {
@@ -24,6 +25,8 @@ export default {
     AppFooter
   }
 }
+
+
 </script>
 
 <style scoped>

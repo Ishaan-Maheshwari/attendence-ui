@@ -3,7 +3,7 @@
     <!-- Header Section -->
     <div class="mb-8">
       <h1 class="text-h4 font-weight-bold text-primary mb-2">Overview</h1>
-      <p class="text-subtitle-1 text-medium-emphasis">Monitor employee attendance and system statius</p>
+      <p class="text-subtitle-1 text-medium-emphasis">Monitor employee attendance and system status</p>
     </div>
 
     <!-- Stats Cards Row -->
@@ -321,6 +321,9 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // Reactive data
 const totalEmployees = ref(0)
@@ -634,6 +637,10 @@ const formatStatus = (status) => {
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
+}
+
+const regularise = (recordId) => {
+  router.push(`/regularise/${recordId}`)
 }
 
 // Initialize component

@@ -52,7 +52,7 @@
             <v-avatar size="32" color="primary" class="me-2">
               <v-icon color="white" size="16">mdi-account</v-icon>
             </v-avatar>
-            <span class="text-grey-darken-2 font-weight-medium me-1">Admin</span>
+            <span class="text-grey-darken-2 font-weight-medium me-1">{{ username }}</span>
             <v-icon color="grey-darken-1" size="16">mdi-chevron-down</v-icon>
           </v-btn>
         </template>
@@ -107,13 +107,14 @@ export default {
       { name: 'Users', route: 'ManageUsersHome', icon: 'mdi-account-supervisor-outline' }
     ]
 
+    
     const navigateTo = (routeName) => {
       if (routeName) {
         console.log(`Navigating to: ${routeName}`)
         router.push({ name: routeName })
       }
     }
-
+    
     const isActiveRoute = (routeName) => {
       return route.name === routeName
     }
@@ -122,15 +123,17 @@ export default {
       authStore.logout()
       router.push({ name: 'Login' })
     }
-
+    
     const isLoggedIn = computed(() => authStore.isAuthenticated)
+    const username = computed(() => authStore.getUser.username)
 
     return {
       navigationItems,
       navigateTo,
       isActiveRoute,
       logout,
-      isLoggedIn
+      isLoggedIn,
+      username
     }
   }
 }
