@@ -687,7 +687,9 @@ const filteredRecords = computed(() => {
 
   // Date filter
   if (dateFilter.value) {
-    filtered = filtered.filter(record => record.start_date === dateFilter.value)
+    const [year, month, day] = dateFilter.value.split('-')
+    const lookout_date = `${day}-${month}-${year}`
+    filtered = filtered.filter(record => record.start_date === lookout_date)
   }
 
   // Month filter
@@ -837,14 +839,9 @@ const rejectRecord = async (id) => {
 }
 
 const regularizeRecord = (id) => {
-  router.push(`/regularise/${id}`)
-  // const record = records.value.find(r => r.id === id)
-  // if (record) {
-  //   selectRecord(null, { item: record })
-  //   setTimeout(() => {
-  //     isEditing.value = true
-  //   }, 100)
-  // }
+  if (confirm("Are you sure you want to regularize this record?")){
+    router.push(`/regularise/${id}`)
+  }
 }
 
 const openNewRecordDialog = () => {

@@ -10,15 +10,15 @@
     <v-row class="mb-8">
       <!-- Total Employees Card -->
       <v-col cols="12" md="6" lg="3">
-        <v-card elevation="2" class="h-100" :loading="loading.employees">
+        <v-card elevation="2" class="h-100" :loading="loading.monthRecords">
           <v-card-text class="pa-6">
             <div class="d-flex align-center justify-space-between">
               <div>
-                <p class="text-caption text-medium-emphasis mb-1">Total Employees</p>
-                <h2 class="text-h3 font-weight-bold text-primary">{{ totalEmployees }}</h2>
+                <p class="text-caption text-medium-emphasis mb-1">Records This Month</p>
+                <h2 class="text-h3 font-weight-bold text-primary">{{ currentMonthRecords }}</h2>
               </div>
               <v-avatar size="56" color="primary" variant="tonal">
-                <v-icon size="28">mdi-account-group</v-icon>
+                <v-icon size="28">mdi-account-multiple-check</v-icon>
               </v-avatar>
             </div>
           </v-card-text>
@@ -180,8 +180,21 @@
                 <p class="text-caption text-medium-emphasis mt-1">Issues requiring attention</p>
               </div>
               <div class="d-flex align-center" style="gap: 12px;">
+                <!-- Month Picker -->
+                 <v-select v-if="areAllExceptionsLoaded"
+                  v-model="monthFilter"
+                  :items="monthOptions"
+                  label="Filter by Month"
+                  variant="outlined"
+                  density="compact"
+                  placeholder="Select Month"
+                  hide-details
+                  clearable
+                  color="primary"
+                  prepend-inner-icon="mdi-check-circle-outline"
+                />
                 <!-- 📅 Date Picker -->
-                <v-text-field
+                <v-text-field v-if="areAllExceptionsLoaded"
                   v-model="selectedDate"
                   label="Filter by Date"
                   type="date"
@@ -195,9 +208,16 @@
                 <v-btn 
                   icon="mdi-refresh" 
                   variant="text" 
-                  size="small"
+                  size="regular"
                   :loading="loading.exceptions"
                   @click="fetchExceptions"
+                />
+                <v-btn 
+                  icon="mdi-cloud-refresh" 
+                  variant="text" 
+                  size="regular"
+                  :loading="loading.allExceptions"
+                  @click="fetchAllExceptions"
                 />
               </div>
             </div>
@@ -305,7 +325,6 @@
                     block
                     :loading="loading.export"
                     prepend-icon="mdi-download"
-                    disabled="true"
                   >
                     Export Report
                   </v-btn>
@@ -326,20 +345,38 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 // Reactive data
-const totalEmployees = ref(0)
+const currentMonthRecords = ref(0)
 const employees = ref([])
 const checkedInEmployees = ref([])
 const exceptions = ref([])
 const syncInfo = ref({})
 const searchTodayAttendance = ref("")
 const selectedDate = ref(""); // bound to date picker
+const monthFilter = ref(""); // bound to month picker
+const areAllExceptionsLoaded = ref(false);
+
+const monthOptions = [
+  { title: "Jan", value: "01" },
+  { title: "Feb", value: "02" },
+  { title: "Mar", value: "03" },
+  { title: "Apr", value: "04" },
+  { title: "May", value: "05" },
+  { title: "Jun", value: "06" },
+  { title: "Jul", value: "07" },
+  { title: "Aug", value: "08" },
+  { title: "Sep", value: "09" },
+  { title: "Oct", value: "10" },
+  { title: "Nov", value: "11" },
+  { title: "Dec", value: "12" },
+]
 
 const loading = ref({
-  employees: false,
+  monthRecords: false,
   checkedIn: false,
   exceptions: false,
   syncInfo: false,
-  export: false
+  export: false,
+  allExceptions: false
 })
 
 const exportForm = ref({
@@ -405,45 +442,45 @@ function employeeFilter(value, search, item) {
 }
 
 const filteredExceptions = computed(() => {
-  if (!selectedDate.value) return exceptions.value;
+  let filtered = exceptions.value;
+  if (selectedDate.value) {
+    // Filter exceptions by selected date
+    filtered = exceptions.value.filter(e => {
+      // Parse dd-MM-yyyy string properly
+      const [day, month, year] = e.start_date.split("-");
+      const formattedExDate = `${year}-${month}-${day}`; // yyyy-MM-dd
+      return formattedExDate === selectedDate.value;
+    });
+  }
 
-  return exceptions.value.filter(e => {
-    // Parse dd-MM-yyyy string properly
-    const [day, month, year] = e.start_date.split("-");
-    const formattedExDate = `${year}-${month}-${day}`; // yyyy-MM-dd
-    return formattedExDate === selectedDate.value;
-  });
+  if(monthFilter.value) {
+    filtered = exceptions.value.filter(e => e.start_date.split('-')[1] === monthFilter.value);
+  }
+
+  return filtered;
+
 });
 
+
 // API functions
-const fetchEmployees = async () => {
+const fetchCurrentMonthRecordCount = async () => {
   loading.value.employees = true
   try {
-    const response = await fetch('/api/employees/count')
+    const response = await fetch('/api/records/count')
     const data = await response.json()
     
     // Handle different response formats
-    if (Array.isArray(data)) {
-      employees.value = data
-      totalEmployees.value = data.length
-    } else if (data.employees && Array.isArray(data.employees)) {
-      employees.value = data.employees
-      totalEmployees.value = data.employees.length
-    } else if (typeof data === 'number') {
-      totalEmployees.value = data
-      employees.value = []
+    if (typeof data === 'number') {
+      currentMonthRecords.value = data
     } else if (data.count) {
-      totalEmployees.value = data.count
-      employees.value = []
+      currentMonthRecords.value = data.count
     } else {
       console.log('Unexpected data format:', data)
-      employees.value = []
-      totalEmployees.value = 0
+      currentMonthRecords.value = 0
     }
   } catch (error) {
     console.error('Error fetching employees:', error)
-    employees.value = []
-    totalEmployees.value = 0
+    currentMonthRecords.value = 0
   } finally {
     loading.value.employees = false
   }
@@ -475,7 +512,8 @@ const fetchCheckedInEmployees = async () => {
 const fetchExceptions = async () => {
   loading.value.exceptions = true
   try {
-    const response = await fetch('/api/records/unusuals')
+    const url = '/api/records/unusuals/current-month'
+    const response = await fetch(url)
     const data = await response.json()
     
     // Ensure data is array
@@ -492,6 +530,32 @@ const fetchExceptions = async () => {
     exceptions.value = []
   } finally {
     loading.value.exceptions = false
+    areAllExceptionsLoaded.value = false
+  }
+}
+
+const fetchAllExceptions = async () => {
+  loading.value.allExceptions = true
+  try {
+    const url = '/api/records/unusuals'
+    const response = await fetch(url)
+    const data = await response.json()
+    
+    // Ensure data is array
+    if (Array.isArray(data)) {
+      exceptions.value = data
+    } else if (data.records && Array.isArray(data.records)) {
+      exceptions.value = data.records
+    } else {
+      console.log('Unexpected exceptions data format:', data)
+      exceptions.value = []
+    }
+  } catch (error) {
+    console.error('Error fetching exceptions:', error)
+    exceptions.value = []
+  } finally {
+    loading.value.allExceptions = false
+    areAllExceptionsLoaded.value = true
   }
 }
 
@@ -521,14 +585,14 @@ const exportReport = async () => {
       to_date: exportForm.value.to_date
     })
     
-    const response = await fetch(`/api/reports/records?${params}`)
+    const response = await fetch(`/api/records/report?${params}`)
     const blob = await response.blob()
     
     // Create download link
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `attendance_report_${exportForm.value.from_date}_to_${exportForm.value.to_date}.xlsx`
+    a.download = `attendance_report_${exportForm.value.from_date}_to_${exportForm.value.to_date}.csv`
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)
@@ -646,7 +710,7 @@ const regularise = (recordId) => {
 // Initialize component
 onMounted(async () => {
   // First fetch employees to populate the lookup
-  await fetchEmployees()
+  await fetchCurrentMonthRecordCount()
   
   // Then fetch other data that depends on employee names
   await Promise.all([

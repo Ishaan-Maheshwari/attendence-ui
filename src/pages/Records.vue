@@ -28,11 +28,11 @@
               class="search-field"
             />
           </v-col>
-          <!-- <v-col cols="12" md="2">
+          <v-col cols="12" md="2">
             <v-select
-              v-model="statusFilter"
-              :items="statusOptions"
-              label="Status"
+              v-model="monthFilter"
+              :items="monthOptions"
+              label="Month"
               variant="outlined"
               density="compact"
               hide-details
@@ -40,7 +40,7 @@
               color="primary"
               prepend-inner-icon="mdi-check-circle-outline"
             />
-          </v-col> -->
+          </v-col>
           <v-col cols="12" md="2">
             <v-text-field
               v-model="dateFilter"
@@ -554,6 +554,7 @@ const search = ref("")
 const statusFilter = ref("")
 const dateFilter = ref("")
 const employeeFilter = ref("")
+const monthFilter = ref("")
 
 const headers = [
   { title: "Employee", key: "emp_id", width: "250px", sortable: true },
@@ -566,6 +567,21 @@ const headers = [
 ]
 
 const statusOptions = ["Pending", "Approved", "Rejected"]
+const monthOptions = [
+  { title: "January", value: "01" },
+  { title: "February", value: "02" },
+  { title: "March", value: "03" },
+  { title: "April", value: "04" },
+  { title: "May", value: "05" },
+  { title: "June", value: "06" },
+  { title: "July", value: "07" },
+  { title: "August", value: "08" },
+  { title: "September", value: "09" },
+  { title: "October", value: "10" },
+  { title: "November", value: "11" },
+  { title: "December", value: "12" },
+]
+
 
 const newRecordDialog = ref(false)
 const newRecord = ref({
@@ -603,9 +619,16 @@ const filteredRecords = computed(() => {
     filtered = filtered.filter(record => record.status === statusFilter.value)
   }
 
+  // Month filter
+  if (monthFilter.value) {
+    filtered = filtered.filter(record => record.start_date.split('-')[1] === monthFilter.value)
+  }
+
   // Date filter
   if (dateFilter.value) {
-    filtered = filtered.filter(record => record.start_date === dateFilter.value)
+    const [year, month, day] = dateFilter.value.split('-')
+    const lookout_date = `${day}-${month}-${year}`
+    filtered = filtered.filter(record => record.start_date === lookout_date)
   }
 
   // Employee filter
@@ -661,6 +684,12 @@ const updateRecord = async () => {
     await fetchRecords()
   } catch (error) {
     console.error("Error updating record:", error)
+  }
+}
+
+const regularizeRecord = (id) => {
+  if (confirm("Are you sure you want to regularize this record?")) {
+    router.push(`/regularise/${id}`)
   }
 }
 
@@ -736,6 +765,7 @@ const clearFilters = () => {
   statusFilter.value = ""
   dateFilter.value = ""
   employeeFilter.value = ""
+  monthFilter.value = ""
 }
 
 // Helper functions
