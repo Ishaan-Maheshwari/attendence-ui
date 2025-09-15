@@ -48,7 +48,8 @@
           <v-card-text class="pa-6">
             <div class="d-flex align-center justify-space-between">
               <div>
-                <p class="text-caption text-medium-emphasis mb-1">Inconsistencies this month</p>
+                <p v-if="areAllExceptionsLoaded" class="text-caption text-medium-emphasis mb-1">Total Inconsistencies</p>
+                <p v-else class="text-caption text-medium-emphasis mb-1">Inconsistencies this month</p>
                 <h2 class="text-h3 font-weight-bold text-warning">{{ exceptionsCount }}</h2>
               </div>
               <v-avatar size="56" color="warning" variant="tonal">
@@ -511,6 +512,8 @@ const fetchCheckedInEmployees = async () => {
 
 const fetchExceptions = async () => {
   loading.value.exceptions = true
+  monthFilter.value = ''
+  selectedDate.value = null
   try {
     const url = '/api/records/unusuals/current-month'
     const response = await fetch(url)
@@ -525,6 +528,8 @@ const fetchExceptions = async () => {
       console.log('Unexpected exceptions data format:', data)
       exceptions.value = []
     }
+
+    exceptions.value.sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
   } catch (error) {
     console.error('Error fetching exceptions:', error)
     exceptions.value = []
