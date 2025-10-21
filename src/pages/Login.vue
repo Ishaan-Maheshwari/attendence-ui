@@ -167,7 +167,7 @@ async function handleLogin() {
   error.value = null
   
   try {
-    const res = await fetch('http://localhost:5000/api/auth/login', {
+    const res = await fetch('http://10.3.4.45:5000/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 

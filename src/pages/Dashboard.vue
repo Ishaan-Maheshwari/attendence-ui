@@ -136,7 +136,8 @@
                     <span class="text-caption">{{ getInitials(getEmployeeName(item.emp_id)) }}</span>
                   </v-avatar>
                   <div>
-                    <p class="font-weight-medium mb-0">{{ getEmployeeName(item.emp_id) }}</p>
+                    <!-- <p class="font-weight-medium mb-0">{{ getEmployeeName(item.emp_id) }}</p> -->
+                    <p class="font-weight-medium mb-0">{{ item.employee?.name || 'Employee ' + item.emp_id }}</p>
                     <p class="text-caption text-medium-emphasis">ID: {{ item.emp_id }}</p>
                   </div>
                 </div>
@@ -236,7 +237,7 @@
                   </template>
 
                   <v-list-item-title class="font-weight-medium">
-                    {{ getEmployeeName(exception.emp_id) }}
+                    {{ exception.employee?.name || 'Employee ' + exception.emp_id }}
                   </v-list-item-title>
                   
                   <v-list-item-subtitle>
@@ -287,7 +288,7 @@
         </v-card>
 
         <!-- Export Report Card -->
-        <v-card elevation="2">
+        <!-- <v-card elevation="2">
           <v-card-title class="pa-6 pb-4">
             <h3 class="text-h6 font-weight-bold">Export Report</h3>
             <p class="text-caption text-medium-emphasis mt-1">Download attendance records</p>
@@ -333,7 +334,55 @@
               </v-row>
             </v-form>
           </v-card-text>
-        </v-card>
+        </v-card> -->
+         <v-card elevation="2">
+        <v-card-title class="pa-6 pb-4">
+          <h3 class="text-h6 font-weight-bold">Export Report</h3>
+          <p class="text-caption text-medium-emphasis mt-1">
+            Download attendance records
+          </p>
+        </v-card-title>
+
+        <v-card-text class="pa-6 pt-0">
+          <v-form @submit.prevent="exportReport">
+            <v-row>
+              <v-col cols="12">
+                <v-select
+                  v-model="month"
+                  :items="items"
+                  :rules="[v => !!v || 'Month is required']"
+                  label="Month"
+                  required
+                ></v-select
+              ></v-col>
+
+              <v-col cols="12"
+                ><v-select
+                  v-model="year"
+                  :items="years"
+                  :rules="[v => !!v || 'Year is required']"
+                  label="Year"
+                  required
+                ></v-select
+              ></v-col>
+
+              <v-col cols="12">
+                <v-btn
+                  type="submit"
+                  color="primary"
+                  variant="flat"
+                  block
+                  :loading="reportLoading"
+                  prepend-icon="mdi-download"
+                >
+                  Export Report
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+      </v-card>
+
       </v-col>
     </v-row>
   </v-container>
@@ -355,6 +404,12 @@ const searchTodayAttendance = ref("")
 const selectedDate = ref(""); // bound to date picker
 const monthFilter = ref(""); // bound to month picker
 const areAllExceptionsLoaded = ref(false);
+const month = ref();
+const year = ref();
+const reportLoading = ref(false);
+
+const items = [1,2,3,4,5,6,7,8,9,10,11,12];
+const years = [2025];
 
 const monthOptions = [
   { title: "Jan", value: "01" },
@@ -578,6 +633,48 @@ const fetchSyncInfo = async () => {
 }
 
 const exportReport = async () => {
+  if (!month.value || !year.value) {
+    alert('Please select both month and year')
+    return
+  }
+  
+  reportLoading.value = true
+  try {
+    const params = {
+      month: month.value,
+      year: year.value
+    };
+    
+    const response = await fetch(`/api/reports/consolidated`,
+        {
+          method: 'POST', // Set the method to POST
+          headers: {
+            'Content-Type': 'application/json', // Indicate the body content is JSON
+          },
+          body: JSON.stringify(params), // Convert the object to a JSON string
+        });
+    const blob = await response.blob()
+    
+    // Create download link
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `attendance_report_${month.value}_${year.value}.csv`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    reportLoading.value = false
+  } catch (error) {
+    console.error('Error exporting report:', error)
+    alert('Error downloading report')
+  } finally {
+    loading.value.export = false
+  }
+}
+
+/*
+const exportReport = async () => {
   if (!exportForm.value.from_date || !exportForm.value.to_date) {
     alert('Please select both from and to dates')
     return
@@ -609,6 +706,8 @@ const exportReport = async () => {
     loading.value.export = false
   }
 }
+*/
+
 
 // Utility functions
 const getEmployeeName = (empId) => {
@@ -616,7 +715,7 @@ const getEmployeeName = (empId) => {
     return `Employee ${empId}`
   }
   const employee = employees.value.find(emp => emp.id === empId || emp.id === String(empId))
-  return employee ? employee.name : `Employee ${empId}`
+  return employee ? employee.employee.name : `Employee ${empId}`
 }
 
 const getInitials = (name) => {

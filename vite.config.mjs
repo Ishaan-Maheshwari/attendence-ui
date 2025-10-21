@@ -61,9 +61,12 @@ export default defineConfig({
     ],
   },
   server: {
+    host: '0.0.0.0', // Make the server accessible on your local network
+    port: 8080, 
+
     proxy: {
       '^/api': {
-        target: 'http://localhost:5000',
+        target: 'http://10.3.4.45:5000',
         changeOrigin: true,
       },
     },
