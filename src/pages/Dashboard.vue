@@ -409,7 +409,7 @@ const year = ref();
 const reportLoading = ref(false);
 
 const items = [1,2,3,4,5,6,7,8,9,10,11,12];
-const years = [2025];
+const years = [2025, 2026];
 
 const monthOptions = [
   { title: "Jan", value: "01" },
@@ -659,7 +659,7 @@ const exportReport = async () => {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `attendance_report_${month.value}_${year.value}.csv`
+    a.download = `attendance_report_${month.value}_${year.value}.xlsx`
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)
